@@ -36,6 +36,12 @@ I do not believe this software can replace conventional music notation. I do not
 
 ## <a name="CODE"></a>3. Coding Questions
 
+If you’re curious about contributing code to Music Blocks, the best way to start is by exploring the repository and experimenting with small changes. Even if you’re new, there are beginner-friendly issues to try, and you’ll learn a lot by playing with the blocks yourself.  
+
+For a step-by-step guide on setting up your development environment, finding issues, and submitting contributions, check out our [CONTRIBUTING.md](link-to-contributing.md) file. It’s designed to help new contributors get started smoothly and confidently.  
+
+Creating a project with Music Blocks yourself is also highly recommended—it helps you understand the code and the logic behind the blocks, making your contributions much more meaningful.
+
 ## <a name="EDUCATION"></a>4. Education Questions
 
 ### What kind of practical educational activities would you use to complement the project?
