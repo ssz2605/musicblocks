@@ -1,27 +1,33 @@
-import { PracticeValidator } from "./PracticeValidator.js";
+import { PracticeProblems } from "./PracticeProblems.js";
 import { BadgeManager } from "../badges/BadgeManager.js";
 
-const STORAGE_KEY = "mb_practice_progress";
+const STORAGE_KEY = "mb_practice_levels";
 
 export const PracticeManager = {
-    progress: JSON.parse(localStorage.getItem(STORAGE_KEY)) || {},
+  progress: JSON.parse(localStorage.getItem(STORAGE_KEY)) || {},
 
-    complete(problem, level) {
-        this.progress[problem.id] = true;
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(this.progress));
+  isLevelComplete(level) {
+    return !!this.progress[level];
+  },
 
-        // Check if whole level is done
-        if (this.isLevelComplete(level)) {
-            BadgeManager.unlock(level);
-        }
-    },
+  completeLevel(problem) {
+    this.progress[problem.level] = true;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(this.progress));
 
-    isDone(problemId) {
-        return !!this.progress[problemId];
-    },
+    this.checkBadge(problem.badgeGroup);
+  },
 
-    isLevelComplete(level) {
-        const problems = window.PracticeProblems[level];
-        return problems.every(p => this.isDone(p.id));
+  checkBadge(group) {
+    const completed = PracticeProblems.filter(
+      p => p.badgeGroup === group && this.progress[p.level]
+    );
+
+    const total = PracticeProblems.filter(
+      p => p.badgeGroup === group
+    );
+
+    if (completed.length === total.length) {
+      BadgeManager.unlock(group);
     }
+  }
 };

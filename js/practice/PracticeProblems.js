@@ -1,58 +1,58 @@
-export const PracticeProblems = {
-    easy: [
-        {
-            id: "easy_1",
-            title: "Play a Sound 🎵",
-            image: "images/practice/easy_play_note.png",
-            expected: {
-                blocks: ["start", "note", "pitch"]
-            }
-        },
-        {
-            id: "easy_2",
-            title: "Higher or Lower 🎶",
-            image: "images/practice/easy_octave.png",
-            expected: {
-                blocks: ["start", "note", "pitch", "number"]
-            }
-        }
-    ],
+export const PracticeProblems = [
+  {
+    level: 1,
+    title: "Hot Cross Buns – Part A",
+    description: `
+        To explore structure, we will recreate the first part of the melody
+        <strong>Hot Cross Buns</strong>.
 
-    medium: [
-        {
-            id: "medium_1",
-            title: "Copy the Tune 🎧",
-            image: "images/practice/medium_melody.png",
-            expected: {
-                minNotes: 3
-            }
-        },
-        {
-            id: "medium_2",
-            title: "Change Instrument 🎹",
-            image: "images/practice/medium_instrument.png",
-            expected: {
-                blocks: ["voicename"]
-            }
-        }
-    ],
+        Your task:
+        • Observe the block structure shown
+        • Use only the blocks already on the screen
+        • Recreate the same musical structure
+        • Do not add extra blocks
+    `,
+    image: "images/practice/Level1.png",
+    expected: {
+      blocks: ["start", "note", "pitch"],
+      minNotes: 3
+    },
+    badgeGroup: "melody_basics"
+  },
 
-    hard: [
-        {
-            id: "hard_1",
-            title: "Make a Pattern 🔁",
-            image: "images/practice/hard_repeat.png",
-            expected: {
-                blocks: ["repeat"]
-            }
-        },
-        {
-            id: "hard_2",
-            title: "Music + Drawing 🎨",
-            image: "images/practice/hard_graphics.png",
-            expected: {
-                graphicsInsideNote: true
-            }
-        }
-    ]
-};
+  {
+    level: 2,
+    title: "Hot Cross Buns – Complete Form",
+    description: `
+Now extend the melody by repeating patterns.
+
+Your task:
+• Use repetition to organize the melody
+• The tune should sound structured
+• Observe how musical form emerges
+    `,
+    image: "images/practice/hot_cross_buns_full.png",
+    expected: {
+      blocks: ["repeat"],
+      minNotes: 6
+    },
+    badgeGroup: "melody_basics"
+  },
+
+  {
+    level: 3,
+    title: "Music + Motion",
+    description: `
+Music Blocks allows music and motion together.
+
+Your task:
+• Add a motion block inside a musical note
+• Music and drawing should happen together
+    `,
+    image: "images/practice/music_and_motion.png",
+    expected: {
+      graphicsInsideNote: true
+    },
+    badgeGroup: "music_and_motion"
+  }
+];

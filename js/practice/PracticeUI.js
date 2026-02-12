@@ -2,107 +2,91 @@ import { PracticeProblems } from "./PracticeProblems.js";
 import { PracticeManager } from "./PracticeManager.js";
 import { PracticeValidator } from "./PracticeValidator.js";
 
-window.PracticeProblems = PracticeProblems;
-
 export const PracticeUI = {
   open() {
-    if (document.getElementById("practice-overlay")) return;
+    if (document.getElementById("practice-panel")) return;
 
-    const overlay = document.createElement("div");
-    overlay.id = "practice-overlay";
+    const panel = document.createElement("div");
+    panel.id = "practice-panel";
 
-    overlay.innerHTML = `
-      <div class="practice-box">
-        <h2>🧩 Practice Mode</h2>
-        ${this.renderLevel("easy")}
-        ${this.renderLevel("medium")}
-        ${this.renderLevel("hard")}
-        <button class="close">Close</button>
+    panel.innerHTML = `
+      <div class="practice-menu-header">
+        <h3>Practice</h3>
+        <button id="close-practice">✕</button>
       </div>
+
+      <div id="practice-content"></div>
     `;
 
-    document.body.appendChild(overlay);
+    document.body.appendChild(panel);
 
-    overlay.querySelectorAll("[data-problem]").forEach(btn => {
+    document.getElementById("close-practice").onclick = () => {
+      panel.remove();
+    };
+
+    this.renderLevelMenu();
+  },
+
+  renderLevelMenu() {
+    const container = document.getElementById("practice-content");
+
+    container.innerHTML = `
+      ${PracticeProblems.map(p => `
+        <button 
+          class="level-btn ${PracticeManager.isLevelComplete(p.level) ? "done" : ""}"
+          data-level="${p.level}">
+          Level ${p.level}
+        </button>
+      `).join("")}
+    `;
+
+    container.querySelectorAll(".level-btn").forEach(btn => {
       btn.onclick = () => {
-        const level = btn.dataset.level;
-        const index = btn.dataset.problem;
-        const problem = PracticeProblems[level][index];
-
-        if (PracticeValidator.validate(problem)) {
-          PracticeManager.complete(problem, level);
-          btn.classList.add("done");
-          alert("✅ Correct!");
-        } else {
-          alert("❌ Try matching the picture!");
-        }
+        const level = Number(btn.dataset.level);
+        this.renderLevel(level);
       };
     });
-
-    overlay.querySelector(".close").onclick = () => overlay.remove();
   },
 
   renderLevel(level) {
-    return `
-      <div class="practice-level ${level}">
-        <h3>${level.toUpperCase()}</h3>
-        ${PracticeProblems[level].map((p, i) => `
-          <div class="practice-question">
-            <img src="${p.image}" />
-            <button 
-              data-level="${level}" 
-              data-problem="${i}"
-              class="${PracticeManager.isDone(p.id) ? "done" : ""}">
-              ${p.title}
-            </button>
-          </div>
-        `).join("")}
-      </div>
+    const problem = PracticeProblems.find(p => p.level === level);
+    const container = document.getElementById("practice-content");
+
+    container.innerHTML = `
+      <button id="back-to-levels">← Back</button>
+
+      <h2>Level ${problem.level}</h2>
+      <h4>${problem.title}</h4>
+      <p>${problem.description}</p>
+
+      <img src="${problem.image}" class="practice-ref"/>
+
+      <button id="check-level">Check My Work</button>
     `;
+
+    document.getElementById("back-to-levels").onclick = () => {
+      this.renderLevelMenu();
+    };
+
+    document.getElementById("check-level").onclick = () => {
+      console.log("🟢 CHECK BUTTON CLICKED");
+      console.log("Problem object:", problem);
+
+      const result = PracticeValidator.validate(problem);
+      console.log("🔎 Validator returned:", result);
+
+      if (result) {
+        PracticeManager.completeLevel(problem);
+        alert("✅ Level completed!");
+
+        // Update button state
+        const btn = document.querySelector(
+          `.level-btn[data-level="${problem.level}"]`
+        );
+        if (btn) btn.classList.add("done");
+      } else {
+        alert("❌ Not quite yet. Compare with the reference image.");
+      }
+    };
   }
 };
-
-function addPracticeTopButton() {
-  const menuBtn = document.getElementById("toggleAuxBtn");
-  if (!menuBtn) {
-    console.warn("Practice: menu button not found yet");
-    return;
-  }
-
-  // Prevent duplicate buttons
-  if (document.getElementById("practice-top-btn")) return;
-
-  const menuLi = menuBtn.closest("li");
-  const ul = menuLi.parentElement;
-
-  const li = document.createElement("li");
-  const btn = document.createElement("a");
-
-  btn.id = "practice-top-btn";
-  btn.className = "tooltipped";
-  btn.setAttribute("data-position", "bottom");
-  btn.setAttribute("data-delay", "10");
-  btn.setAttribute("data-tooltip", "Practice Challenges");
-  btn.style.cursor = "pointer";
-
-  btn.innerHTML = `<i class="material-icons md-48">extension</i>`;
-
-  btn.onclick = () => {
-    console.log("🧩 Practice button clicked");
-    window.startPracticeMode();
-  };
-
-  li.appendChild(btn);
-  ul.insertBefore(li, menuLi.nextSibling);
-
-  // Re-init Materialize tooltip
-  if (window.M && M.Tooltip) {
-    M.Tooltip.init(btn);
-  }
-
-  console.log("✅ Practice button added");
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-  setTimeout(addPracticeTopButton, 500);
-});
