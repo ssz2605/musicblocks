@@ -596,91 +596,92 @@ function Synth() {
 
         const frequency = Tone.Frequency(startPitch).toFrequency();
 
+        // Cache getNoteFromInterval results to avoid duplicate calls (performance optimization)
+        const intervalCache = {
+            "minor 2": getNoteFromInterval(startingPitch, "minor 2"),
+            "augmented 1": getNoteFromInterval(startingPitch, "augmented 1"),
+            "major 2": getNoteFromInterval(startingPitch, "major 2"),
+            "minor 3": getNoteFromInterval(startingPitch, "minor 3"),
+            "augmented 2": getNoteFromInterval(startingPitch, "augmented 2"),
+            "major 3": getNoteFromInterval(startingPitch, "major 3"),
+            "augmented 3": getNoteFromInterval(startingPitch, "augmented 3"),
+            "diminished 4": getNoteFromInterval(startingPitch, "diminished 4"),
+            "perfect 4": getNoteFromInterval(startingPitch, "perfect 4"),
+            "augmented 4": getNoteFromInterval(startingPitch, "augmented 4"),
+            "diminished 5": getNoteFromInterval(startingPitch, "diminished 5"),
+            "perfect 5": getNoteFromInterval(startingPitch, "perfect 5"),
+            "augmented 5": getNoteFromInterval(startingPitch, "augmented 5"),
+            "minor 6": getNoteFromInterval(startingPitch, "minor 6"),
+            "major 6": getNoteFromInterval(startingPitch, "major 6"),
+            "augmented 6": getNoteFromInterval(startingPitch, "augmented 6"),
+            "minor 7": getNoteFromInterval(startingPitch, "minor 7"),
+            "major 7": getNoteFromInterval(startingPitch, "major 7"),
+            "augmented 7": getNoteFromInterval(startingPitch, "augmented 7"),
+            "diminished 8": getNoteFromInterval(startingPitch, "diminished 8"),
+            "perfect 8": getNoteFromInterval(startingPitch, "perfect 8")
+        };
+
         this.noteFrequencies = {
             // note: [octave, Frequency]
             [startingPitch.substring(0, len - 1)]: [Number(startingPitch.slice(-1)), frequency],
-            [getNoteFromInterval(startingPitch, "minor 2")[0]]: [
-                getNoteFromInterval(startingPitch, "minor 2")[1],
-                t["minor 2"] * frequency
-            ],
-            [getNoteFromInterval(startingPitch, "augmented 1")[0]]: [
-                getNoteFromInterval(startingPitch, "augmented 1")[1],
+            [intervalCache["minor 2"][0]]: [intervalCache["minor 2"][1], t["minor 2"] * frequency],
+            [intervalCache["augmented 1"][0]]: [
+                intervalCache["augmented 1"][1],
                 t["augmented 1"] * frequency
             ],
-            [getNoteFromInterval(startingPitch, "major 2")[0]]: [
-                getNoteFromInterval(startingPitch, "major 2")[1],
-                t["major 2"] * frequency
-            ],
-            [getNoteFromInterval(startingPitch, "minor 3")[0]]: [
-                getNoteFromInterval(startingPitch, "minor 3")[1],
-                t["minor 3"] * frequency
-            ],
-            [getNoteFromInterval(startingPitch, "augmented 2")[0]]: [
-                getNoteFromInterval(startingPitch, "augmented 2")[1],
+            [intervalCache["major 2"][0]]: [intervalCache["major 2"][1], t["major 2"] * frequency],
+            [intervalCache["minor 3"][0]]: [intervalCache["minor 3"][1], t["minor 3"] * frequency],
+            [intervalCache["augmented 2"][0]]: [
+                intervalCache["augmented 2"][1],
                 t["augmented 2"] * frequency
             ],
-            [getNoteFromInterval(startingPitch, "major 3")[0]]: [
-                getNoteFromInterval(startingPitch, "major 3")[1],
-                t["major 3"] * frequency
-            ],
-            [getNoteFromInterval(startingPitch, "augmented 3")[0]]: [
-                getNoteFromInterval(startingPitch, "augmented 3")[1],
+            [intervalCache["major 3"][0]]: [intervalCache["major 3"][1], t["major 3"] * frequency],
+            [intervalCache["augmented 3"][0]]: [
+                intervalCache["augmented 3"][1],
                 t["augmented 3"] * frequency
             ],
-            [getNoteFromInterval(startingPitch, "diminished 4")[0]]: [
-                getNoteFromInterval(startingPitch, "diminished 4")[1],
+            [intervalCache["diminished 4"][0]]: [
+                intervalCache["diminished 4"][1],
                 t["diminished 4"] * frequency
             ],
-            [getNoteFromInterval(startingPitch, "perfect 4")[0]]: [
-                getNoteFromInterval(startingPitch, "perfect 4")[1],
+            [intervalCache["perfect 4"][0]]: [
+                intervalCache["perfect 4"][1],
                 t["perfect 4"] * frequency
             ],
-            [getNoteFromInterval(startingPitch, "augmented 4")[0]]: [
-                getNoteFromInterval(startingPitch, "augmented 4")[1],
+            [intervalCache["augmented 4"][0]]: [
+                intervalCache["augmented 4"][1],
                 t["augmented 4"] * frequency
             ],
-            [getNoteFromInterval(startingPitch, "diminished 5")[0]]: [
-                getNoteFromInterval(startingPitch, "diminished 5")[1],
+            [intervalCache["diminished 5"][0]]: [
+                intervalCache["diminished 5"][1],
                 t["diminished 5"] * frequency
             ],
-            [getNoteFromInterval(startingPitch, "perfect 5")[0]]: [
-                getNoteFromInterval(startingPitch, "perfect 5")[1],
+            [intervalCache["perfect 5"][0]]: [
+                intervalCache["perfect 5"][1],
                 t["perfect 5"] * frequency
             ],
-            [getNoteFromInterval(startingPitch, "augmented 5")[0]]: [
-                getNoteFromInterval(startingPitch, "augmented 5")[1],
+            [intervalCache["augmented 5"][0]]: [
+                intervalCache["augmented 5"][1],
                 t["augmented 5"] * frequency
             ],
-            [getNoteFromInterval(startingPitch, "minor 6")[0]]: [
-                getNoteFromInterval(startingPitch, "minor 6")[1],
-                t["minor 6"] * frequency
-            ],
-            [getNoteFromInterval(startingPitch, "major 6")[0]]: [
-                getNoteFromInterval(startingPitch, "major 6")[1],
-                t["major 6"] * frequency
-            ],
-            [getNoteFromInterval(startingPitch, "augmented 6")[0]]: [
-                getNoteFromInterval(startingPitch, "augmented 6")[1],
+            [intervalCache["minor 6"][0]]: [intervalCache["minor 6"][1], t["minor 6"] * frequency],
+            [intervalCache["major 6"][0]]: [intervalCache["major 6"][1], t["major 6"] * frequency],
+            [intervalCache["augmented 6"][0]]: [
+                intervalCache["augmented 6"][1],
                 t["augmented 6"] * frequency
             ],
-            [getNoteFromInterval(startingPitch, "minor 7")[0]]: [
-                getNoteFromInterval(startingPitch, "minor 7")[1],
-                t["minor 7"] * frequency
-            ],
-            [getNoteFromInterval(startingPitch, "major 7")[0]]: [
-                getNoteFromInterval(startingPitch, "major 7")[1],
-                t["major 7"] * frequency
-            ],
-            [getNoteFromInterval(startingPitch, "augmented 7")[0]]: [
-                getNoteFromInterval(startingPitch, "augmented 7")[1],
+            [intervalCache["minor 7"][0]]: [intervalCache["minor 7"][1], t["minor 7"] * frequency],
+            [intervalCache["major 7"][0]]: [intervalCache["major 7"][1], t["major 7"] * frequency],
+            [intervalCache["augmented 7"][0]]: [
+                intervalCache["augmented 7"][1],
                 t["augmented 7"] * frequency
             ],
-            [getNoteFromInterval(startingPitch, "diminished 8")[0]]: [
-                getNoteFromInterval(startingPitch, "diminished 8")[1],
+            [intervalCache["diminished 8"][0]]: [
+                intervalCache["diminished 8"][1],
                 t["diminished 8"] * frequency
             ],
-            [getNoteFromInterval(startingPitch, "perfect 8")[0]]: [
-                getNoteFromInterval(startingPitch, "perfect 8")[1],
+            [intervalCache["perfect 8"][0]]: [
+                intervalCache["perfect 8"][1],
                 t["perfect 8"] * frequency
             ]
         };
@@ -1561,6 +1562,13 @@ function Synth() {
             }
         } else if (sourceName in BUILTIN_SYNTHS) {
             if (instruments[turtle] && instruments[turtle][instrumentName]) {
+                if (typeof instruments[turtle][instrumentName].dispose === "function") {
+                    try {
+                        instruments[turtle][instrumentName].dispose();
+                    } catch (e) {
+                        console.debug("Error disposing instrument:", e);
+                    }
+                }
                 delete instruments[turtle][instrumentName];
             }
 
@@ -1574,6 +1582,13 @@ function Synth() {
             }
         } else if (sourceName in CUSTOM_SYNTHS) {
             if (instruments[turtle] && instruments[turtle][instrumentName]) {
+                if (typeof instruments[turtle][instrumentName].dispose === "function") {
+                    try {
+                        instruments[turtle][instrumentName].dispose();
+                    } catch (e) {
+                        console.debug("Error disposing instrument:", e);
+                    }
+                }
                 delete instruments[turtle][instrumentName];
             }
 
@@ -1584,6 +1599,13 @@ function Synth() {
             instrumentsSource[instrumentName] = [0, "poly"];
         } else if (sourceName in CUSTOMSAMPLES) {
             if (instruments[turtle] && instruments[turtle][instrumentName]) {
+                if (typeof instruments[turtle][instrumentName].dispose === "function") {
+                    try {
+                        instruments[turtle][instrumentName].dispose();
+                    } catch (e) {
+                        console.debug("Error disposing instrument:", e);
+                    }
+                }
                 delete instruments[turtle][instrumentName];
             }
 
@@ -1909,6 +1931,31 @@ function Synth() {
         }
     };
 
+    /**
+     * Tracks an active audio source node for garbage collection on stop.
+     * Handles both Tone.Player instances (drums) and synthesizer voices.
+     * @function
+     * @memberof Synth
+     * @param {number} turtle - The turtle index.
+     * @param {Object} audioNode - The audio source node (Tone.Player, Synth, etc.).
+     */
+    this._trackVoice = (turtle, audioNode) => {
+        if (!this.activity || !this.activity.turtles) {
+            return;
+        }
+
+        try {
+            const singer = this.activity.turtles.ithTurtle(turtle).singer;
+            if (!singer || !singer.activeVoices) {
+                return;
+            }
+
+            singer.activeVoices.add(audioNode);
+        } catch (e) {
+            // Silently fail - tracking is optional
+        }
+    };
+
     // Generalised version of 'trigger and 'triggerwitheffects' functions
     /**
      * Triggers notes on a specified turtle with the given parameters.
@@ -2031,17 +2078,21 @@ function Synth() {
                         instrumentName.slice(0, 21) === "data:audio/wav;base64"
                     ) {
                         tempSynth.start(Tone.now() + future);
+                        this._trackVoice(turtle, tempSynth);
                     } else if (instrumentName.slice(0, 4) === "file") {
                         tempSynth.start(Tone.now() + future);
+                        this._trackVoice(turtle, tempSynth);
                     } else {
                         try {
                             tempSynth.start(Tone.now() + future);
+                            this._trackVoice(turtle, tempSynth);
                         } catch (e) {
                             console.debug("Error starting drum synth:", e);
                         }
                     }
                     break;
                 case 2: // voice sample
+                    this._trackVoice(turtle, tempSynth);
                     await this._performNotes(
                         tempSynth.toDestination(),
                         notes,
@@ -2057,6 +2108,7 @@ function Synth() {
                         tempNotes = notes[0];
                     }
 
+                    this._trackVoice(turtle, tempSynth);
                     await this._performNotes(
                         tempSynth.toDestination(),
                         tempNotes,
@@ -2068,10 +2120,12 @@ function Synth() {
                     );
                     break;
                 case 4:
+                    this._trackVoice(turtle, tempSynth);
                     tempSynth.triggerAttackRelease("c2", beatValue, Tone.now() + future);
                     break;
                 case 0: // default synth
                 default:
+                    this._trackVoice(turtle, tempSynth);
                     await this._performNotes(
                         tempSynth.toDestination(),
                         tempNotes,
@@ -2345,24 +2399,39 @@ function Synth() {
      * @returns {Promise<void>}
      */
     this.startTuner = async () => {
-        // Initialize required components for pie menu
-        if (!window.activity) {
-            window.activity = {
-                blocks: {
-                    blockList: [],
-                    setPitchOctave: () => {},
-                    findPitchOctave: () => 4,
-                    stageClick: false
-                },
-                logo: {
-                    synth: this
-                },
-                canvas: document.createElement("canvas"),
-                blocksContainer: { x: 0, y: 0 },
-                getStageScale: () => 1,
-                KeySignatureEnv: ["A", "major", false]
-            };
-        }
+        const getSafeActivity = () => {
+            try {
+                if (
+                    typeof window !== "undefined" &&
+                    window.ActivityContext &&
+                    typeof window.ActivityContext.getActivity === "function"
+                ) {
+                    return window.ActivityContext.getActivity();
+                }
+            } catch (e) {
+                // Fall through to warning below.
+            }
+
+            // In practice this runs in the browser; keep a safe fallback for tests.
+            try {
+                if (typeof module !== "undefined" && module.exports) {
+                    // eslint-disable-next-line global-require
+                    const ctx = require("../activity-context");
+                    if (ctx && typeof ctx.getActivity === "function") {
+                        return ctx.getActivity();
+                    }
+                }
+            } catch (e) {
+                // Ignore.
+            }
+
+            console.warn("Activity not ready yet in synthutils");
+            return null;
+        };
+
+        // No fake globals: if Activity isn't ready, fail fast.
+        const activity = getSafeActivity();
+        if (!activity) return;
 
         // Initialize wheelnav if not already done
         if (typeof wheelnav !== "function") {
@@ -2643,13 +2712,30 @@ function Synth() {
                             }
 
                             try {
-                                // Create a temporary block object to use with piemenuPitches
+                                // Prepare a non-mutating activity proxy with a local logo fallback
+                                const defaultLogo = {
+                                    synth: {
+                                        createDefaultSynth: () => {},
+                                        loadSynth: () => {},
+                                        setMasterVolume: () => {},
+                                        trigger: () => {},
+                                        inTemperament: "equal"
+                                    },
+                                    errorMsg: msg => {
+                                        console.warn(msg);
+                                    }
+                                };
+
+                                const logo = activity.logo || defaultLogo;
+                                const activityProxy = Object.create(activity);
+                                activityProxy.logo = logo;
+
                                 const tempBlock = {
                                     container: {
                                         x: targetNoteSelector.offsetLeft,
                                         y: targetNoteSelector.offsetTop
                                     },
-                                    activity: window.activity,
+                                    activity: activityProxy,
                                     blocks: {
                                         blockList: [
                                             {
@@ -2697,54 +2783,8 @@ function Synth() {
                                     _triggerLock: false // This is needed for pitch preview
                                 };
 
-                                // Add required activity properties for preview
-                                if (!window.activity.logo) {
-                                    window.activity.logo = {
-                                        synth: {
-                                            createDefaultSynth: () => {},
-                                            loadSynth: () => {},
-                                            setMasterVolume: () => {},
-                                            trigger: (turtle, note, duration, instrument) => {
-                                                // Use the Web Audio API to play the preview note
-                                                const audioContext = new (window.AudioContext ||
-                                                    window.webkitAudioContext)();
-                                                const oscillator = audioContext.createOscillator();
-                                                const gainNode = audioContext.createGain();
-
-                                                oscillator.connect(gainNode);
-                                                gainNode.connect(audioContext.destination);
-
-                                                // Convert note to frequency
-                                                const freq = pitchToFrequency(note[0], "equal");
-                                                oscillator.frequency.value = freq;
-
-                                                // Set volume
-                                                gainNode.gain.value = 0.1; // Low volume for preview
-
-                                                // Schedule note
-                                                oscillator.start();
-                                                gainNode.gain.setValueAtTime(
-                                                    0.1,
-                                                    audioContext.currentTime
-                                                );
-                                                gainNode.gain.linearRampToValueAtTime(
-                                                    0,
-                                                    audioContext.currentTime + duration
-                                                );
-                                                oscillator.stop(
-                                                    audioContext.currentTime + duration
-                                                );
-                                            },
-                                            inTemperament: "equal"
-                                        },
-                                        errorMsg: msg => {
-                                            console.warn(msg);
-                                        }
-                                    };
-                                }
-
-                                // Add key signature environment
-                                window.activity.KeySignatureEnv = ["C", "major", false];
+                                // Add key signature environment (on proxy, not real activity)
+                                activityProxy.KeySignatureEnv = ["C", "major", false];
 
                                 // Make sure wheelDiv is properly positioned and visible
                                 const wheelDiv = docById("wheelDiv");
@@ -3323,10 +3363,11 @@ function Synth() {
         const widgetBody = this.widgetWindow.getWidgetBody();
 
         // Store the current content to restore later
-        this.previousContent = widgetBody.innerHTML;
-
-        // Clear the widget body
-        widgetBody.innerHTML = "";
+        this.previousContent = [];
+        while (widgetBody.firstChild) {
+            this.previousContent.push(widgetBody.firstChild);
+            widgetBody.removeChild(widgetBody.firstChild);
+        }
 
         // Create the cents adjustment interface
         const centsInterface = document.createElement("div");
@@ -3456,13 +3497,85 @@ function Synth() {
      */
     this.removeCentsSlider = function () {
         if (this.sliderDiv && this.sliderDiv.parentNode) {
+            const widgetBody = this.widgetWindow.getWidgetBody();
+            // Clear the slider interface by removing all child nodes
+            while (widgetBody.firstChild) {
+                widgetBody.removeChild(widgetBody.firstChild);
+            }
+
             // Restore the previous content
-            this.widgetWindow.getWidgetBody().innerHTML = this.previousContent;
+            if (Array.isArray(this.previousContent)) {
+                this.previousContent.forEach(node => {
+                    widgetBody.appendChild(node);
+                });
+            }
             this.previousContent = null;
         }
         this.sliderVisible = false;
         this.centsSliderBtn.getElementsByTagName("img")[0].style.filter = "";
         this.centsSliderBtn.style.backgroundColor = "";
+    };
+
+    /**
+     * Disposes all Tone.js instruments, filters, and effects for every turtle
+     * to free audio memory (decoded AudioBuffers, Web Audio nodes, etc.).
+     * Instruments will be re-created by prepSynths() on the next run.
+     * @function
+     * @memberof Synth
+     * @returns {void}
+     */
+    this.disposeAllInstruments = () => {
+        for (const turtle in instruments) {
+            for (const instrumentName in instruments[turtle]) {
+                if (
+                    instruments[turtle][instrumentName] &&
+                    typeof instruments[turtle][instrumentName].dispose === "function"
+                ) {
+                    try {
+                        instruments[turtle][instrumentName].dispose();
+                    } catch (e) {
+                        console.debug("Error disposing instrument:", e);
+                    }
+                }
+                delete instruments[turtle][instrumentName];
+            }
+        }
+
+        for (const turtle in instrumentsFilters) {
+            for (const instrumentName in instrumentsFilters[turtle]) {
+                const filters = instrumentsFilters[turtle][instrumentName];
+                if (Array.isArray(filters)) {
+                    filters.forEach(f => {
+                        if (f && typeof f.dispose === "function") {
+                            try {
+                                f.dispose();
+                            } catch (e) {
+                                console.debug("Error disposing filter:", e);
+                            }
+                        }
+                    });
+                }
+                delete instrumentsFilters[turtle][instrumentName];
+            }
+        }
+
+        for (const turtle in instrumentsEffects) {
+            for (const instrumentName in instrumentsEffects[turtle]) {
+                const effects = instrumentsEffects[turtle][instrumentName];
+                if (Array.isArray(effects)) {
+                    effects.forEach(fx => {
+                        if (fx && typeof fx.dispose === "function") {
+                            try {
+                                fx.dispose();
+                            } catch (e) {
+                                console.debug("Error disposing effect:", e);
+                            }
+                        }
+                    });
+                }
+                delete instrumentsEffects[turtle][instrumentName];
+            }
+        }
     };
 
     this.tone = null;

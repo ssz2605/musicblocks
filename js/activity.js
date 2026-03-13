@@ -18,6 +18,7 @@
    globals
 
    _, ALTO, analyzeProject, BASS, BIGGERBUTTON, BIGGERDISABLEBUTTON,
+   ActivityContext,
    Blocks, Boundary, CARTESIAN, changeImage, closeWidgets,
    COLLAPSEBLOCKSBUTTON, COLLAPSEBUTTON, createDefaultStack,
    createHelpContent, createjs, DATAOBJS, DEFAULTBLOCKSCALE,
@@ -164,6 +165,10 @@ if (_THIS_IS_MUSIC_BLOCKS_) {
     const MUSICBLOCKS_EXTRAS = [
         "widgets/modewidget",
         "widgets/meterwidget",
+        "widgets/PhraseMakerUtils",
+        "widgets/PhraseMakerGrid",
+        "widgets/PhraseMakerUI",
+        "widgets/PhraseMakerAudio",
         "widgets/phrasemaker",
         "widgets/arpeggio",
         "widgets/aiwidget",
@@ -188,8 +193,11 @@ if (_THIS_IS_MUSIC_BLOCKS_) {
     MYDEFINES = MYDEFINES.concat(MUSICBLOCKS_EXTRAS);
 }
 
-// Create a global variable from the Activity obj to provide access to
-// blocks, logo, palettes, and turtles for plugins and js-export.
+// Module-scoped singleton reference to the active Activity instance.
+// • Used by plugins (weather.rtp, etc.) that are eval()'d inside this module's
+//   closure scope and therefore can close over `globalActivity` directly.
+// • External modules (synthutils, etc.) should use ActivityContext.getActivity()
+//   instead of reaching through window.* globals.
 let globalActivity;
 
 /**
@@ -209,6 +217,14 @@ class Activity {
      */
     constructor() {
         globalActivity = this;
+
+        // Register with ActivityContext – the single authority for the Activity singleton.
+        // activity-context.js is declared as a RequireJS dep of this module (loader.js shim),
+        // so window.ActivityContext is guaranteed to exist before this constructor runs.
+        if (window.ActivityContext && typeof window.ActivityContext.setActivity === "function") {
+            window.ActivityContext.setActivity(this);
+        }
+
         this._listeners = [];
 
         this.cellSize = 55;
@@ -400,22 +416,6 @@ class Activity {
             createHelpContent(this);
             window.scroll(0, 0);
 
-            /*
-            try {
-                meSpeak.loadConfig('lib/mespeak_config.json');
-                lang = document.webL10n.getLanguage();
-
-                if (['es', 'ca', 'de', 'el', 'eo', 'fi', 'fr', 'hu', 'it', 'kn', 'la', 'lv', 'nl', 'pl', 'pt', 'ro', 'sk', 'sv', 'tr', 'zh'].indexOf(lang) !== -1) {
-                    meSpeak.loadVoice('lib/voices/' + lang + '.json');
-                } else {
-                    meSpeak.loadVoice('lib/voices/en/en.json');
-                }
-            } catch (e) {
-                // eslint-disable-next-line no-console
-                console.debug(e);
-            }
-            */
-
             document.title = TITLESTRING;
             this.canvas = document.getElementById("myCanvas");
 
@@ -559,14 +559,12 @@ class Activity {
             if (!document.getElementById("helpfulSearchDiv")) {
                 this.setHelpfulSearchDiv(); // Re-create and append the div if it's not found
             }
+            // Cache DOM element reference for performance
+            const helpfulWheelDiv = document.getElementById("helpfulWheelDiv");
             this.helpfulSearchDiv.style.left =
-                document.getElementById("helpfulWheelDiv").offsetLeft +
-                80 * this.getStageScale() +
-                "px";
+                helpfulWheelDiv.offsetLeft + 80 * this.getStageScale() + "px";
             this.helpfulSearchDiv.style.top =
-                document.getElementById("helpfulWheelDiv").offsetTop +
-                110 * this.getStageScale() +
-                "px";
+                helpfulWheelDiv.offsetTop + 110 * this.getStageScale() + "px";
 
             const windowWidth = window.innerWidth;
             const windowHeight = window.innerHeight;
@@ -588,8 +586,10 @@ class Activity {
         // hides helpfulSearchDiv on canvas
 
         this._hideHelpfulSearchWidget = e => {
-            if (document.getElementById("helpfulWheelDiv").style.display !== "none") {
-                document.getElementById("helpfulWheelDiv").style.display = "none";
+            // Cache DOM element reference for performance
+            const helpfulWheelDiv = document.getElementById("helpfulWheelDiv");
+            if (helpfulWheelDiv.style.display !== "none") {
+                helpfulWheelDiv.style.display = "none";
             }
             if (this.helpfulSearchDiv && this.helpfulSearchDiv.parentNode) {
                 this.helpfulSearchDiv.parentNode.removeChild(this.helpfulSearchDiv);
@@ -627,7 +627,9 @@ class Activity {
          * displays helpfulWheel on canvas on right click
          */
         this._displayHelpfulWheel = event => {
-            document.getElementById("helpfulWheelDiv").style.position = "absolute";
+            // Cache DOM element reference for performance (7 lookups reduced to 1)
+            const helpfulWheelDiv = document.getElementById("helpfulWheelDiv");
+            helpfulWheelDiv.style.position = "absolute";
 
             const x = event.clientX;
             const y = event.clientY;
@@ -644,21 +646,21 @@ class Activity {
                 canvasTop
             );
 
-            document.getElementById("helpfulWheelDiv").style.left = helpfulWheelLeft + "px";
+            helpfulWheelDiv.style.left = helpfulWheelLeft + "px";
 
-            document.getElementById("helpfulWheelDiv").style.top = helpfulWheelTop + "px";
+            helpfulWheelDiv.style.top = helpfulWheelTop + "px";
 
             const windowWidth = window.innerWidth - 20;
             const windowHeight = window.innerHeight - 20;
 
             if (helpfulWheelLeft + 350 > windowWidth) {
-                document.getElementById("helpfulWheelDiv").style.left = windowWidth - 350 + "px";
+                helpfulWheelDiv.style.left = windowWidth - 350 + "px";
             }
             if (helpfulWheelTop + 350 > windowHeight) {
-                document.getElementById("helpfulWheelDiv").style.top = windowHeight - 350 + "px";
+                helpfulWheelDiv.style.top = windowHeight - 350 + "px";
             }
 
-            document.getElementById("helpfulWheelDiv").style.display = "";
+            helpfulWheelDiv.style.display = "";
 
             const wheel = new wheelnav("helpfulWheelDiv", null, 300, 300);
             wheel.colors = platformColor.wheelcolors;
@@ -764,8 +766,10 @@ class Activity {
          */
         const findBlocks = activity => {
             activity._findBlocks();
-            if (document.getElementById("helpfulWheelDiv").style.display !== "none") {
-                document.getElementById("helpfulWheelDiv").style.display = "none";
+            // Cache DOM element reference for performance
+            const helpfulWheelDiv = document.getElementById("helpfulWheelDiv");
+            if (helpfulWheelDiv.style.display !== "none") {
+                helpfulWheelDiv.style.display = "none";
                 activity.__tick();
             }
         };
@@ -1187,7 +1191,7 @@ class Activity {
          * @constructor
          */
         this.setHomeContainers = homeState => {
-            if (this.homeButtonContainer === null) {
+            if (this.homeButtonContainer === null || this.homeButtonContainer === undefined) {
                 return;
             }
 
@@ -1638,8 +1642,10 @@ class Activity {
                     table.remove();
                 }
 
-                if (document.getElementById("helpfulWheelDiv").style.display !== "none") {
-                    document.getElementById("helpfulWheelDiv").style.display = "none";
+                // Cache DOM element reference for performance
+                const helpfulWheelDiv = document.getElementById("helpfulWheelDiv");
+                if (helpfulWheelDiv.style.display !== "none") {
+                    helpfulWheelDiv.style.display = "none";
                     this.__tick();
                 }
             };
@@ -1718,6 +1724,12 @@ class Activity {
                 return; // Exit the function if execution is already in progress
             }
 
+            if (!activity || typeof activity._doRecordButton !== "function") {
+                console.warn("doRecordButton called without valid activity context");
+                isExecuting = false;
+                return;
+            }
+
             isExecuting = true; // Set the flag to indicate execution has started
             activity._doRecordButton();
         };
@@ -1727,34 +1739,136 @@ class Activity {
          * @private
          */
         this._doRecordButton = () => {
+            const that = this;
             const start = document.getElementById("record"),
                 recInside = document.getElementById("rec_inside");
             let mediaRecorder;
-            var clickEvent = new Event("click");
+            const clickEvent = new Event("click");
             let flag = 0;
+            let currentStream = null;
+            let audioDestination = null;
 
             /**
              * Records the screen using the browser's media devices API.
              * @returns {Promise<MediaStream>} A promise resolving to the recorded media stream.
              */
+
             async function recordScreen() {
-                flag = 1;
-                return await navigator.mediaDevices.getDisplayMedia({
-                    preferCurrentTab: "True",
-                    systemAudio: "include",
-                    audio: "True",
-                    video: { mediaSource: "tab" },
-                    bandwidthProfile: {
-                        video: {
-                            clientTrackSwitchOffControl: "auto",
-                            contentPreferencesMode: "auto"
-                        }
-                    },
-                    preferredVideoCodecs: "auto"
-                });
+                const mode = localStorage.getItem("musicBlocksRecordMode");
+
+                if (mode === "canvas") {
+                    return await recordCanvasOnly();
+                } else {
+                    return await recordScreenWithTools();
+                }
             }
 
-            const that = this;
+            async function recordCanvasOnly() {
+                flag = 1;
+                const canvas = document.getElementById("myCanvas");
+                if (!canvas) {
+                    throw new Error("Canvas element not found");
+                }
+
+                // Get the toolbar height to exclude from recording
+                const toolbar = document.getElementById("toolbars");
+                const toolbarHeight = toolbar ? toolbar.offsetHeight : 0;
+
+                // Get canvas dimensions
+                const canvasRect = canvas.getBoundingClientRect();
+
+                // Get the actual canvas dimensions
+                const canvasWidth = canvas.width;
+                const canvasHeight = canvas.height;
+
+                // Calculate the visible area (excluding toolbar)
+                const visibleHeight = canvasHeight - toolbarHeight;
+
+                // Create a clean recording canvas
+                const recordCanvas = document.createElement("canvas");
+                recordCanvas.width = canvasWidth;
+                recordCanvas.height = canvasHeight;
+                const recordCtx = recordCanvas.getContext("2d");
+
+                // Set background to match the canvas (white/light gray)
+                recordCtx.fillStyle = "#f5f5f5"; // Adjust this color to match your canvas background
+                let animationFrameId;
+
+                // Function to continuously copy canvas content
+                const copyFrame = () => {
+                    // Fill background
+                    recordCtx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+                    // Draw only the visible portion of the canvas (skip the toolbar area)
+                    recordCtx.drawImage(
+                        canvas,
+                        0,
+                        toolbarHeight, // Source x, y (skip toolbar)
+                        canvasWidth,
+                        visibleHeight, // Source width, height
+                        0,
+                        0, // Destination x, y
+                        canvasWidth,
+                        visibleHeight // Destination width, height
+                    );
+
+                    // Continue if still recording
+                    if (flag === 1) {
+                        animationFrameId = requestAnimationFrame(copyFrame);
+                    }
+                };
+
+                // Start copying frames
+                copyFrame();
+
+                // Capture the canvas stream directly at 30fps
+                const canvasStream = recordCanvas.captureStream(30);
+
+                // Add audio track if available
+                const Tone = that.logo.synth.tone;
+                if (Tone && Tone.context) {
+                    const dest = Tone.context.createMediaStreamDestination();
+                    Tone.Destination.connect(dest);
+                    audioDestination = dest;
+                    const audioTrack = dest.stream.getAudioTracks()[0];
+                    if (audioTrack) {
+                        canvasStream.addTrack(audioTrack);
+                    }
+                }
+                currentStream = canvasStream;
+
+                // Clean up animation frame when recording stops
+                canvasStream.getTracks()[0].addEventListener("ended", () => {
+                    if (animationFrameId) {
+                        cancelAnimationFrame(animationFrameId);
+                    }
+                });
+
+                return canvasStream;
+            }
+            async function recordScreenWithTools() {
+                flag = 1;
+
+                try {
+                    return await navigator.mediaDevices.getDisplayMedia({
+                        preferCurrentTab: "True",
+                        systemAudio: "include",
+                        audio: "True",
+                        video: { mediaSource: "tab" },
+                        bandwidthProfile: {
+                            video: {
+                                clientTrackSwitchOffControl: "auto",
+                                contentPreferencesMode: "auto"
+                            }
+                        },
+                        preferredVideoCodecs: "auto"
+                    });
+                } catch (error) {
+                    console.error("Screen capture failed:", error);
+                    flag = 0;
+                    throw error;
+                }
+            }
 
             /**
              * Saves the recorded chunks as a video file.
@@ -1763,10 +1877,35 @@ class Activity {
             function saveFile(recordedChunks) {
                 flag = 1;
                 recInside.classList.remove("blink");
+                // Prevent zero-byte files
+                if (!recordedChunks || recordedChunks.length === 0) {
+                    alert(_("Recorded file is empty. File not saved."));
+                    flag = 0;
+                    recording();
+                    doRecordButton();
+                    return;
+                }
                 const blob = new Blob(recordedChunks, {
                     type: "video/webm"
                 });
-
+                if (blob.size === 0) {
+                    alert(_("Recorded file is empty. File not saved."));
+                    flag = 0;
+                    recording();
+                    doRecordButton();
+                    return;
+                }
+                // Clean up stream after recording
+                if (currentStream) {
+                    currentStream.getTracks().forEach(track => track.stop());
+                    currentStream = null;
+                }
+                if (audioDestination && audioDestination.stream) {
+                    audioDestination.stream.getTracks().forEach(track => track.stop());
+                    audioDestination = null;
+                }
+                mediaRecorder = null;
+                // Prompt to save file
                 const filename = window.prompt(_("Enter file name"));
                 if (filename === null || filename.trim() === "") {
                     alert(_("File save canceled"));
@@ -1775,27 +1914,33 @@ class Activity {
                     doRecordButton();
                     return; // Exit without saving the file
                 }
-
                 const downloadLink = document.createElement("a");
                 downloadLink.href = URL.createObjectURL(blob);
                 downloadLink.download = `${filename}.webm`;
-
                 document.body.appendChild(downloadLink);
                 downloadLink.click();
                 URL.revokeObjectURL(blob);
                 document.body.removeChild(downloadLink);
                 flag = 0;
-                // eslint-disable-next-line no-use-before-define
+                // Allow multiple recordings
                 recording();
                 doRecordButton();
-                that.textMsg(_("Click on stop saving"));
+                that.textMsg(_("Recording stopped. File saved."));
             }
             /**
              * Stops the recording process.
              */
             function stopRec() {
                 flag = 0;
-                mediaRecorder.stop();
+
+                if (mediaRecorder && typeof mediaRecorder.stop === "function") {
+                    mediaRecorder.stop();
+                }
+
+                // Clean up the recording canvas stream
+                if (currentStream) {
+                    currentStream.getTracks().forEach(track => track.stop());
+                }
                 const node = document.createElement("p");
                 node.textContent = "Stopped recording";
                 document.body.appendChild(node);
@@ -1810,9 +1955,10 @@ class Activity {
             function createRecorder(stream, mimeType) {
                 flag = 1;
                 recInside.classList.add("blink");
+                that.textMsg(_("Recording started. Click stop to finish."));
                 start.removeEventListener("click", createRecorder, true);
                 let recordedChunks = [];
-                const mediaRecorder = new MediaRecorder(stream);
+                mediaRecorder = new MediaRecorder(stream);
                 stream.oninactive = function () {
                     // eslint-disable-next-line no-console
                     console.log("Recording is ready to save");
@@ -1846,31 +1992,57 @@ class Activity {
              * Handles the recording process.
              */
             function recording() {
-                start.addEventListener("click", async function handler() {
-                    const stream = await recordScreen();
-                    const mimeType = "video/webm";
-                    mediaRecorder = createRecorder(stream, mimeType);
-                    if (flag == 1) {
-                        this.removeEventListener("click", handler);
+                // Remove any previous handler to avoid multiple triggers
+                if (start._recordHandler) {
+                    start.removeEventListener("click", start._recordHandler);
+                }
+                const handler = async function handler() {
+                    try {
+                        const stream = await recordScreen();
+                        const mimeType = "video/webm";
+                        mediaRecorder = createRecorder(stream, mimeType);
+                        if (flag == 1) {
+                            start.removeEventListener("click", handler);
+                            // Add stop handler
+                            const stopHandler = function stopHandler() {
+                                if (mediaRecorder && mediaRecorder.state === "recording") {
+                                    mediaRecorder.stop();
+                                    mediaRecorder = new MediaRecorder(stream);
+                                    recInside.classList.remove("blink");
+                                    flag = 0;
+                                    // Clean up stream
+                                    if (currentStream) {
+                                        currentStream.getTracks().forEach(track => track.stop());
+                                    }
+                                    if (audioDestination && audioDestination.stream) {
+                                        audioDestination.stream
+                                            .getTracks()
+                                            .forEach(track => track.stop());
+                                    }
+                                }
+                                start.removeEventListener("click", stopHandler);
+                                // Re-enable recording for next time
+                                recording();
+                            };
+                            start.addEventListener("click", stopHandler);
+                        }
+                        recInside.setAttribute("fill", "red");
+                    } catch (error) {
+                        console.error("Recording failed:", error);
+                        that.textMsg(_("Recording failed: ") + error.message);
+                        flag = 0;
+                        // Re-enable recording button
+                        recording();
                     }
-                    const node = document.createElement("p");
-                    node.textContent = "Started recording";
-                    document.body.appendChild(node);
-                    recInside.setAttribute("fill", "red");
-                });
+                };
+                start.addEventListener("click", handler);
+                start._recordHandler = handler;
             }
 
             // Start recording process if not already executing
             if (flag == 0 && isExecuting) {
                 recording();
                 start.dispatchEvent(clickEvent);
-                flag = 1;
-            }
-
-            // Stop recording if already executing
-            if (flag == 1 && isExecuting) {
-                start.addEventListener("click", stopRec);
-                flag = 0;
             }
         };
 
@@ -2009,6 +2181,11 @@ class Activity {
                 activity.regeneratePalettes();
             }
 
+            // Update record button and dropdown visibility
+            if (activity.toolbar && typeof activity.toolbar.updateRecordButton === "function") {
+                activity.toolbar.updateRecordButton(() => doRecordButton(activity));
+            }
+
             // Force immediate canvas refresh
             activity.refreshCanvas();
         };
@@ -2019,8 +2196,10 @@ class Activity {
         const setScroller = activity => {
             activity._setScroller();
             activity._setupBlocksContainerEvents();
-            if (document.getElementById("helpfulWheelDiv").style.display !== "none") {
-                document.getElementById("helpfulWheelDiv").style.display = "none";
+            // Cache DOM element reference for performance
+            const helpfulWheelDiv = document.getElementById("helpfulWheelDiv");
+            if (helpfulWheelDiv.style.display !== "none") {
+                helpfulWheelDiv.style.display = "none";
             }
         };
 
@@ -2114,8 +2293,10 @@ class Activity {
          */
         const doLargerBlocks = async activity => {
             await activity._doLargerBlocks();
-            if (document.getElementById("helpfulWheelDiv").style.display !== "none") {
-                document.getElementById("helpfulWheelDiv").style.display = "none";
+            // Cache DOM element reference for performance
+            const helpfulWheelDiv = document.getElementById("helpfulWheelDiv");
+            if (helpfulWheelDiv.style.display !== "none") {
+                helpfulWheelDiv.style.display = "none";
                 activity.__tick();
             }
         };
@@ -2149,8 +2330,10 @@ class Activity {
          */
         const doSmallerBlocks = async activity => {
             await activity._doSmallerBlocks();
-            if (document.getElementById("helpfulWheelDiv").style.display !== "none") {
-                document.getElementById("helpfulWheelDiv").style.display = "none";
+            // Cache DOM element reference for performance
+            const helpfulWheelDiv = document.getElementById("helpfulWheelDiv");
+            if (helpfulWheelDiv.style.display !== "none") {
+                helpfulWheelDiv.style.display = "none";
                 activity.__tick();
             }
         };
@@ -2678,13 +2861,15 @@ class Activity {
 
             const bitmap = new createjs.Bitmap(img);
             container.addChild(bitmap);
-            bitmap.cache(0, 0, 1200, 900);
+            // Do NOT cache the bitmap here. Each cached grid allocates a
+            // 1200x900x4 = ~4.3 MB backing canvas, and with 8 grids that
+            // totals ~35 MB even though at most 1 grid is visible at a time.
+            // Instead, we cache lazily in _show*() and uncache in _hide*().
 
             bitmap.x = (this.canvas.width - 1200) / 2;
             bitmap.y = (this.canvas.height - 900) / 2;
             bitmap.scaleX = bitmap.scaleY = bitmap.scale = 1;
             bitmap.visible = false;
-            bitmap.updateCache();
 
             return bitmap;
         };
@@ -2748,8 +2933,19 @@ class Activity {
             img.src = "data:image/svg+xml;base64," + window.btoa(base64Encode(svgData));
         };
 
+        /*
+         * Creates and renders error message containers with appropriate artwork.
+         * Some error messages have special artwork.
+         */
+        this._createErrorContainers = () => {
+            for (let i = 0; i < ERRORARTWORK.length; i++) {
+                const name = ERRORARTWORK[i];
+                this._makeErrorArtwork(name);
+            }
+        };
+
         /**
-         * Initializes the Idle Watcher mechanism to throttle createjs.Ticker
+         * Initialize an idle watcher that throttles the application's framerate
          * when the application is inactive and no music is playing.
          * This significantly reduces CPU usage and improves battery life.
          */
@@ -2759,13 +2955,13 @@ class Activity {
             const IDLE_FPS = 1;
 
             let lastActivity = Date.now();
-            let isIdle = false;
+            this.isAppIdle = false;
 
             // Wake up function - restores full framerate
             const resetIdleTimer = () => {
                 lastActivity = Date.now();
-                if (isIdle) {
-                    isIdle = false;
+                if (this.isAppIdle) {
+                    this.isAppIdle = false;
                     createjs.Ticker.framerate = ACTIVE_FPS;
                     // Force immediate redraw for responsiveness
                     if (this.stage) this.stage.update();
@@ -2785,32 +2981,16 @@ class Activity {
                 const isMusicPlaying = this.logo?._alreadyRunning || false;
 
                 if (!isMusicPlaying && Date.now() - lastActivity > IDLE_THRESHOLD) {
-                    if (!isIdle) {
-                        isIdle = true;
+                    if (!this.isAppIdle) {
+                        this.isAppIdle = true;
                         createjs.Ticker.framerate = IDLE_FPS;
                         console.log("⚡ Idle mode: Throttling to 1 FPS to save battery");
                     }
-                } else if (isIdle && isMusicPlaying) {
+                } else if (this.isAppIdle && isMusicPlaying) {
                     // Music started playing - wake up immediately
                     resetIdleTimer();
                 }
             }, 1000);
-
-            // Expose activity instance for external checks
-            if (typeof window !== "undefined") {
-                window.activity = this;
-            }
-        };
-
-        /*
-         * Creates and renders error message containers with appropriate artwork.
-         * Some error messages have special artwork.
-         */
-        this._createErrorContainers = () => {
-            for (let i = 0; i < ERRORARTWORK.length; i++) {
-                const name = ERRORARTWORK[i];
-                this._makeErrorArtwork(name);
-            }
         };
 
         /**
@@ -3184,8 +3364,11 @@ class Activity {
                         };
 
                         // Capture phase fires BEFORE jQuery UI's event delegation
-                        img.addEventListener("mousedown", down, true);
-                        img.addEventListener("touchstart", down, { capture: true, passive: false });
+                        li[0].addEventListener("mousedown", down, true);
+                        li[0].addEventListener("touchstart", down, {
+                            capture: true,
+                            passive: false
+                        });
 
                         li.append(img);
                         li.append("<a> " + item.label + "</a>");
@@ -3987,8 +4170,10 @@ class Activity {
                 return;
             }
 
-            if (document.getElementById("helpfulWheelDiv").style.display !== "none") {
-                document.getElementById("helpfulWheelDiv").style.display = "none";
+            // Cache DOM element reference for performance
+            const helpfulWheelDiv = document.getElementById("helpfulWheelDiv");
+            if (helpfulWheelDiv.style.display !== "none") {
+                helpfulWheelDiv.style.display = "none";
                 activity.__tick();
             }
         };
@@ -4005,8 +4190,10 @@ class Activity {
             this._restoreTrashById(this.blocks.trashStacks[this.blocks.trashStacks.length - 1]);
             activity.textMsg(_("Item restored from the trash."), 3000);
 
-            if (document.getElementById("helpfulWheelDiv").style.display !== "none") {
-                document.getElementById("helpfulWheelDiv").style.display = "none";
+            // Cache DOM element reference for performance
+            const helpfulWheelDiv = document.getElementById("helpfulWheelDiv");
+            if (helpfulWheelDiv.style.display !== "none") {
+                helpfulWheelDiv.style.display = "none";
                 activity.__tick();
             }
         };
@@ -4032,6 +4219,19 @@ class Activity {
                 const blk = this.blocks.dragGroup[b];
                 this.blocks.blockList[blk].trash = false;
                 this.blocks.moveBlockRelative(blk, dx, dy);
+
+                // Re-cache the container if it was uncached to save
+                // memory in sendStackToTrash().
+                const block = this.blocks.blockList[blk];
+                if (block.container && !block.container.bitmapCache) {
+                    block.container.cache(
+                        0,
+                        0,
+                        Math.max(block.width, 1),
+                        Math.max(block.height, 1)
+                    );
+                }
+
                 this.blocks.blockList[blk].show();
             }
 
@@ -4198,10 +4398,12 @@ class Activity {
                     this._restoreTrashById(blockId);
                     trashView.classList.add("hidden");
                 });
-                handleClickOutsideTrashView(trashView);
 
                 trashView.appendChild(listItem);
             });
+
+            // Attach outside-click listener once, after all items are rendered
+            handleClickOutsideTrashView(trashView);
 
             const existingView = document.getElementById("trashView");
             if (existingView) {
@@ -4369,8 +4571,10 @@ class Activity {
          */
         const changeBlockVisibility = activity => {
             activity._changeBlockVisibility();
-            if (document.getElementById("helpfulWheelDiv").style.display !== "none") {
-                document.getElementById("helpfulWheelDiv").style.display = "none";
+            // Cache DOM element reference for performance
+            const helpfulWheelDiv = document.getElementById("helpfulWheelDiv");
+            if (helpfulWheelDiv.style.display !== "none") {
+                helpfulWheelDiv.style.display = "none";
                 activity.__tick();
             }
         };
@@ -4403,8 +4607,10 @@ class Activity {
          */
         const toggleCollapsibleStacks = activity => {
             activity._toggleCollapsibleStacks();
-            if (document.getElementById("helpfulWheelDiv").style.display !== "none") {
-                document.getElementById("helpfulWheelDiv").style.display = "none";
+            // Cache DOM element reference for performance
+            const helpfulWheelDiv = document.getElementById("helpfulWheelDiv");
+            if (helpfulWheelDiv.style.display !== "none") {
+                helpfulWheelDiv.style.display = "none";
                 activity.__tick();
             }
         };
@@ -4436,6 +4642,11 @@ class Activity {
          */
         this.clearCache = () => {
             this.blocks.blockList.forEach(block => {
+                // Skip trashed blocks — they are hidden and their backing
+                // canvases are freed in sendStackToTrash(). Re-caching them
+                // here would waste ~0.5–2 MB per trashed block.
+                if (block.trash) return;
+
                 if (block.container) {
                     block.container.uncache();
                     block.container.cache();
@@ -4517,8 +4728,10 @@ class Activity {
          */
         const chooseKeyMenu = that => {
             piemenuKey(that);
-            if (document.getElementById("helpfulWheelDiv").style.display !== "none") {
-                document.getElementById("helpfulWheelDiv").style.display = "none";
+            // Cache DOM element reference for performance
+            const helpfulWheelDiv = document.getElementById("helpfulWheelDiv");
+            if (helpfulWheelDiv.style.display !== "none") {
+                helpfulWheelDiv.style.display = "none";
             }
         };
 
@@ -5617,7 +5830,7 @@ class Activity {
          */
         this._hideCartesian = () => {
             this.cartesianBitmap.visible = false;
-            this.cartesianBitmap.updateCache();
+            this.cartesianBitmap.uncache();
             this.update = true;
         };
 
@@ -5626,6 +5839,7 @@ class Activity {
          */
         this._showCartesian = () => {
             this.cartesianBitmap.visible = true;
+            this.cartesianBitmap.cache(0, 0, 1200, 900);
             this.cartesianBitmap.updateCache();
             this.update = true;
         };
@@ -5635,7 +5849,7 @@ class Activity {
          */
         this._hidePolar = () => {
             this.polarBitmap.visible = false;
-            this.polarBitmap.updateCache();
+            this.polarBitmap.uncache();
             this.update = true;
         };
 
@@ -5644,6 +5858,7 @@ class Activity {
          */
         this._showPolar = () => {
             this.polarBitmap.visible = true;
+            this.polarBitmap.cache(0, 0, 1200, 900);
             this.polarBitmap.updateCache();
             this.update = true;
         };
@@ -5656,45 +5871,33 @@ class Activity {
             for (let i = 0; i < 7; i++) {
                 this.grandSharpBitmap[i].visible = false;
                 this.grandSharpBitmap[i].x = newX;
-                this.grandSharpBitmap[i].updateCache();
                 this.grandFlatBitmap[i].visible = false;
                 this.grandFlatBitmap[i].x = newX;
-                this.grandFlatBitmap[i].updateCache();
 
                 this.trebleSharpBitmap[i].visible = false;
                 this.trebleSharpBitmap[i].x = newX;
-                this.trebleSharpBitmap[i].updateCache();
                 this.trebleFlatBitmap[i].visible = false;
                 this.trebleFlatBitmap[i].x = newX;
-                this.trebleFlatBitmap[i].updateCache();
 
                 this.sopranoSharpBitmap[i].visible = false;
                 this.sopranoSharpBitmap[i].x = newX;
-                this.sopranoSharpBitmap[i].updateCache();
                 this.sopranoFlatBitmap[i].visible = false;
                 this.sopranoFlatBitmap[i].x = newX;
-                this.sopranoFlatBitmap[i].updateCache();
 
                 this.altoSharpBitmap[i].visible = false;
                 this.altoSharpBitmap[i].x = newX;
-                this.altoSharpBitmap[i].updateCache();
                 this.altoFlatBitmap[i].visible = false;
                 this.altoFlatBitmap[i].x = newX;
-                this.altoFlatBitmap[i].updateCache();
 
                 this.tenorSharpBitmap[i].visible = false;
                 this.tenorSharpBitmap[i].x = newX;
-                this.tenorSharpBitmap[i].updateCache();
                 this.tenorFlatBitmap[i].visible = false;
                 this.tenorFlatBitmap[i].x = newX;
-                this.tenorFlatBitmap[i].updateCache();
 
                 this.bassSharpBitmap[i].visible = false;
                 this.bassSharpBitmap[i].x = newX;
-                this.bassSharpBitmap[i].updateCache();
                 this.bassFlatBitmap[i].visible = false;
                 this.bassFlatBitmap[i].x = newX;
-                this.bassFlatBitmap[i].updateCache();
             }
             this.update = true;
         };
@@ -5704,7 +5907,7 @@ class Activity {
          */
         this._hideTreble = () => {
             this.trebleBitmap.visible = false;
-            this.trebleBitmap.updateCache();
+            this.trebleBitmap.uncache();
             this._hideAccidentals();
             this.update = true;
         };
@@ -5714,6 +5917,7 @@ class Activity {
          */
         this._showTreble = () => {
             this.trebleBitmap.visible = true;
+            this.trebleBitmap.cache(0, 0, 1200, 900);
             this.trebleBitmap.updateCache();
             this._hideAccidentals();
             // eslint-disable-next-line no-console
@@ -5744,13 +5948,11 @@ class Activity {
                 if (scale.includes(_sharps[i])) {
                     this.trebleSharpBitmap[i].x += dx;
                     this.trebleSharpBitmap[i].visible = true;
-                    this.trebleSharpBitmap[i].updateCache();
                     dx += 15;
                 }
                 if (scale.includes(_flats[i])) {
                     this.trebleFlatBitmap[i].x += dx;
                     this.trebleFlatBitmap[i].visible = true;
-                    this.trebleFlatBitmap[i].updateCache();
                     dx += 15;
                 }
             }
@@ -5763,7 +5965,7 @@ class Activity {
          */
         this._hideGrand = () => {
             this.grandBitmap.visible = false;
-            this.grandBitmap.updateCache();
+            this.grandBitmap.uncache();
             this._hideAccidentals();
             this.update = true;
         };
@@ -5773,6 +5975,7 @@ class Activity {
          */
         this._showGrand = () => {
             this.grandBitmap.visible = true;
+            this.grandBitmap.cache(0, 0, 1200, 900);
             this.grandBitmap.updateCache();
             this._hideAccidentals();
             // eslint-disable-next-line no-console
@@ -5803,13 +6006,11 @@ class Activity {
                 if (scale.includes(_sharps[i])) {
                     this.grandSharpBitmap[i].x += dx;
                     this.grandSharpBitmap[i].visible = true;
-                    this.grandSharpBitmap[i].updateCache();
                     dx += 15;
                 }
                 if (scale.includes(_flats[i])) {
                     this.grandFlatBitmap[i].x += dx;
                     this.grandFlatBitmap[i].visible = true;
-                    this.grandFlatBitmap[i].updateCache();
                     dx += 15;
                 }
             }
@@ -5821,7 +6022,7 @@ class Activity {
          */
         this._hideSoprano = () => {
             this.sopranoBitmap.visible = false;
-            this.sopranoBitmap.updateCache();
+            this.sopranoBitmap.uncache();
             this.update = true;
         };
 
@@ -5830,6 +6031,7 @@ class Activity {
          */
         this._showSoprano = () => {
             this.sopranoBitmap.visible = true;
+            this.sopranoBitmap.cache(0, 0, 1200, 900);
             this.sopranoBitmap.updateCache();
             this._hideAccidentals();
             // eslint-disable-next-line no-console
@@ -5860,13 +6062,11 @@ class Activity {
                 if (scale.includes(_sharps[i])) {
                     this.sopranoSharpBitmap[i].x += dx;
                     this.sopranoSharpBitmap[i].visible = true;
-                    this.sopranoSharpBitmap[i].updateCache();
                     dx += 15;
                 }
                 if (scale.includes(_flats[i])) {
                     this.sopranoFlatBitmap[i].x += dx;
                     this.sopranoFlatBitmap[i].visible = true;
-                    this.sopranoFlatBitmap[i].updateCache();
                     dx += 15;
                 }
             }
@@ -5879,7 +6079,7 @@ class Activity {
          */
         this._hideAlto = () => {
             this.altoBitmap.visible = false;
-            this.altoBitmap.updateCache();
+            this.altoBitmap.uncache();
             this._hideAccidentals();
             this.update = true;
         };
@@ -5893,6 +6093,7 @@ class Activity {
          */
         this._showAlto = () => {
             this.altoBitmap.visible = true;
+            this.altoBitmap.cache(0, 0, 1200, 900);
             this.altoBitmap.updateCache();
             this._hideAccidentals();
             // eslint-disable-next-line no-console
@@ -5923,13 +6124,11 @@ class Activity {
                 if (scale.includes(_sharps[i])) {
                     this.altoSharpBitmap[i].x += dx;
                     this.altoSharpBitmap[i].visible = true;
-                    this.altoSharpBitmap[i].updateCache();
                     dx += 15;
                 }
                 if (scale.includes(_flats[i])) {
                     this.altoFlatBitmap[i].x += dx;
                     this.altoFlatBitmap[i].visible = true;
-                    this.altoFlatBitmap[i].updateCache();
                     dx += 15;
                 }
             }
@@ -5942,7 +6141,7 @@ class Activity {
          */
         this._hideTenor = () => {
             this.tenorBitmap.visible = false;
-            this.tenorBitmap.updateCache();
+            this.tenorBitmap.uncache();
             this.update = true;
         };
 
@@ -5951,6 +6150,7 @@ class Activity {
          */
         this._showTenor = () => {
             this.tenorBitmap.visible = true;
+            this.tenorBitmap.cache(0, 0, 1200, 900);
             this.tenorBitmap.updateCache();
             this._hideAccidentals();
             // eslint-disable-next-line no-console
@@ -5981,13 +6181,11 @@ class Activity {
                 if (scale.includes(_sharps[i])) {
                     this.tenorSharpBitmap[i].x += dx;
                     this.tenorSharpBitmap[i].visible = true;
-                    this.tenorSharpBitmap[i].updateCache();
                     dx += 15;
                 }
                 if (scale.includes(_flats[i])) {
                     this.tenorFlatBitmap[i].x += dx;
                     this.tenorFlatBitmap[i].visible = true;
-                    this.tenorFlatBitmap[i].updateCache();
                     dx += 15;
                 }
             }
@@ -6000,7 +6198,7 @@ class Activity {
          */
         this._hideBass = () => {
             this.bassBitmap.visible = false;
-            this.bassBitmap.updateCache();
+            this.bassBitmap.uncache();
             this._hideAccidentals();
             this.update = true;
         };
@@ -6010,6 +6208,7 @@ class Activity {
          */
         this._showBass = () => {
             this.bassBitmap.visible = true;
+            this.bassBitmap.cache(0, 0, 1200, 900);
             this.bassBitmap.updateCache();
             this._hideAccidentals();
             // eslint-disable-next-line no-console
@@ -6040,13 +6239,11 @@ class Activity {
                 if (scale.includes(_sharps[i])) {
                     this.bassSharpBitmap[i].x += dx;
                     this.bassSharpBitmap[i].visible = true;
-                    this.bassSharpBitmap[i].updateCache();
                     dx += 15;
                 }
                 if (scale.includes(_flats[i])) {
                     this.bassFlatBitmap[i].x += dx;
                     this.bassFlatBitmap[i].visible = true;
-                    this.bassFlatBitmap[i].updateCache();
                     dx += 15;
                 }
             }
@@ -6060,6 +6257,7 @@ class Activity {
          */
         this.prepareExport = () => {
             const blockMap = [];
+            const blockIndexById = new Map();
             this.hasMatrixDataBlock = false;
             for (let blk = 0; blk < this.blocks.blockList.length; blk++) {
                 const myBlock = this.blocks.blockList[blk];
@@ -6068,6 +6266,7 @@ class Activity {
                     continue;
                 }
 
+                blockIndexById.set(blk, blockMap.length);
                 blockMap.push(blk);
             }
 
@@ -6211,17 +6410,19 @@ class Activity {
 
                 const connections = [];
                 for (let c = 0; c < myBlock.connections.length; c++) {
-                    const mapConnection = blockMap.indexOf(myBlock.connections[c]);
-                    if (myBlock.connections[c] === null || mapConnection === -1) {
+                    const connection = myBlock.connections[c];
+                    const mapConnection = blockIndexById.get(connection);
+                    if (connection === null || mapConnection === undefined) {
                         connections.push(null);
                     } else {
                         connections.push(mapConnection);
                     }
                 }
 
+                const blockIndex = blockIndexById.get(blk);
                 if (args === null) {
                     data.push([
-                        blockMap.indexOf(blk),
+                        blockIndex,
                         myBlock.name,
                         myBlock.container.x,
                         myBlock.container.y,
@@ -6229,7 +6430,7 @@ class Activity {
                     ]);
                 } else {
                     data.push([
-                        blockMap.indexOf(blk),
+                        blockIndex,
                         [myBlock.name, args],
                         myBlock.container.x,
                         myBlock.container.y,
@@ -6883,6 +7084,7 @@ class Activity {
                 // set selection mode to false
                 this.blocks.setSelectionToActivity(false);
                 this.refreshCanvas();
+                // Cache DOM element reference for performance
                 document.getElementById("helpfulWheelDiv").style.display = "none";
             }
         };
@@ -6923,6 +7125,7 @@ class Activity {
                 this.unhighlightSelectedBlocks(false, false);
                 this.blocks.setSelectedBlocks(this.selectedBlocks);
                 this.refreshCanvas();
+                // Cache DOM element reference for performance
                 document.getElementById("helpfulWheelDiv").style.display = "none";
             }
         };
@@ -6944,6 +7147,8 @@ class Activity {
             this.currentX = 0;
             this.currentY = 0;
             this.hasMouseMoved = false;
+            // rAF guard for throttling drag-select mousemove
+            this._dragSelectRafPending = false;
             if (this.selectionArea && this.selectionArea.parentNode) {
                 this.selectionArea.parentNode.removeChild(this.selectionArea);
             }
@@ -6954,17 +7159,24 @@ class Activity {
 
             this.addEventListener(document, "mousemove", event => {
                 this.hasMouseMoved = true;
-                // event.preventDefault();
-                // this.selectedBlocks = [];
                 if (this.isDragging && this.isSelecting) {
                     this.currentX = event.clientX;
                     this.currentY = event.clientY;
-                    if (!this.blocks.isBlockMoving && !this.turtles.running()) {
-                        this.setSelectionMode(true);
-                        this.drawSelectionArea();
-                        this.selectedBlocks = this.selectBlocksInDragArea();
-                        this.unhighlightSelectedBlocks(true, true);
-                        this.blocks.setSelectedBlocks(this.selectedBlocks);
+                    // Throttle drag-select to one update per animation frame
+                    if (
+                        !this._dragSelectRafPending &&
+                        !this.blocks.isBlockMoving &&
+                        !this.turtles.running()
+                    ) {
+                        this._dragSelectRafPending = true;
+                        requestAnimationFrame(() => {
+                            this._dragSelectRafPending = false;
+                            this.setSelectionMode(true);
+                            this.drawSelectionArea();
+                            this.selectedBlocks = this.selectBlocksInDragArea();
+                            this.unhighlightSelectedBlocks(true, true);
+                            this.blocks.setSelectedBlocks(this.selectedBlocks);
+                        });
                     }
                 }
             });
@@ -7000,15 +7212,23 @@ class Activity {
             const width = Math.abs(this.currentX - this.startX);
             const height = Math.abs(this.currentY - this.startY);
 
-            this.selectionArea.style.display = "flex";
-            this.selectionArea.style.position = "absolute";
-            this.selectionArea.style.left = x + "px";
-            this.selectionArea.style.top = y + "px";
-            this.selectionArea.style.height = height + "px";
-            this.selectionArea.style.width = width + "px";
-            this.selectionArea.style.zIndex = "9989";
-            this.selectionArea.style.backgroundColor = "rgba(137, 207, 240, 0.5)";
-            this.selectionArea.style.pointerEvents = "none";
+            // Batch all CSS writes into a single cssText assignment
+            // to avoid multiple forced style recalculations.
+            this.selectionArea.style.cssText =
+                "display:flex;position:absolute;" +
+                "left:" +
+                x +
+                "px;top:" +
+                y +
+                "px;" +
+                "width:" +
+                width +
+                "px;height:" +
+                height +
+                "px;" +
+                "z-index:9989;" +
+                "background-color:rgba(137,207,240,0.5);" +
+                "pointer-events:none;";
 
             this.dragArea = { x, y, width, height };
         };
@@ -7050,43 +7270,33 @@ class Activity {
         // Unhighlight the selected blocks
 
         this.unhighlightSelectedBlocks = (unhighlight, selectionModeOn) => {
+            // Build a Set of selected block indices for O(1) lookup
+            // instead of O(n*m) deep-equality comparisons.
+            const selectedSet = new Set();
             for (let i = 0; i < this.selectedBlocks.length; i++) {
-                for (const blk in this.blocks.blockList) {
-                    if (this.isEqual(this.blocks.blockList[blk], this.selectedBlocks[i])) {
-                        if (unhighlight) {
-                            this.blocks.unhighlightSelectedBlocks(blk, true);
-                        } else {
-                            this.blocks.highlight(blk, true);
-                            this.refreshCanvas();
-                        }
-                    }
+                const idx = this.blocks.blockList.indexOf(this.selectedBlocks[i]);
+                if (idx >= 0) {
+                    selectedSet.add(idx);
                 }
+            }
+
+            for (const blk of selectedSet) {
+                if (unhighlight) {
+                    this.blocks.unhighlightSelectedBlocks(blk, true);
+                } else {
+                    this.blocks.highlight(blk, true);
+                }
+            }
+
+            if (!unhighlight && selectedSet.size > 0) {
+                this.refreshCanvas();
             }
         };
 
-        // Check if two blocks are same or not.
+        // Check if two blocks are the same by identity (reference equality).
 
         this.isEqual = (obj1, obj2) => {
-            const keys1 = Object.keys(obj1);
-            const keys2 = Object.keys(obj2);
-
-            if (keys1.length !== keys2.length) {
-                return false;
-            }
-
-            for (const key of keys1) {
-                if (!obj2.hasOwnProperty(key)) {
-                    return false;
-                }
-            }
-
-            for (const key of keys1) {
-                if (obj1[key] !== obj2[key]) {
-                    return false;
-                }
-            }
-
-            return true;
+            return obj1 === obj2;
         };
 
         this.setSelectionMode = selection => {
@@ -7256,7 +7466,7 @@ class Activity {
             this.toolbar.renderHelpIcon(showHelp);
             this.toolbar.renderModeSelectIcon(
                 doSwitchMode,
-                doRecordButton,
+                () => doRecordButton(this),
                 doAnalytics,
                 doOpenPlugin,
                 deletePlugin,
@@ -7795,8 +8005,10 @@ class Activity {
 
             this.prepSearchWidget();
 
-            // create functionality of 2D drag to select blocks in bulk
+            // initialize doSearch
+            this.doSearch();
 
+            // create functionality of 2D drag to select blocks in bulk
             this._create2Ddrag();
 
             /*
@@ -7987,6 +8199,44 @@ class Activity {
         }
     }
 }
+
+// ---------------------------------------------------------------------------
+// Hard Deprecation Guard — window.activity
+//
+// The Activity singleton is no longer exposed on window.activity.
+// All code must use ActivityContext.getActivity() instead.
+// This guard ensures:
+//   • Silent-regression safety (warns loudly in console, not silently undefined)
+//   • A migration window — replace with a hard removal in the next major version
+// ---------------------------------------------------------------------------
+(function installActivityDeprecationGuard() {
+    if (typeof window === "undefined") return; // safety for SSR / Node test runners
+    try {
+        Object.defineProperty(window, "activity", {
+            configurable: true, // allow removal in the next major version
+            enumerable: false,
+            get() {
+                // eslint-disable-next-line no-console
+                console.warn(
+                    "[Deprecated] window.activity is removed. " +
+                        "Use ActivityContext.getActivity() instead."
+                );
+                return undefined;
+            },
+            set() {
+                // eslint-disable-next-line no-console
+                console.error(
+                    "[Deprecated] window.activity is removed and cannot be set. " +
+                        "Use ActivityContext.setActivity() via activity-context.js."
+                );
+            }
+        });
+    } catch (e) {
+        // Fail silently — defining the property must never break the app.
+        // eslint-disable-next-line no-console
+        console.warn("[ActivityDeprecationGuard] Could not install guard:", e);
+    }
+})();
 
 const activity = new Activity();
 
