@@ -27,6 +27,33 @@ export const PracticeUI = {
     this.renderLevelMenu();
   },
 
+  loadStarterBlocks(level) {
+
+    if (level !== 1) return;
+
+    const activity =
+      typeof globalActivity !== "undefined"
+        ? globalActivity
+        : window.activity;
+
+    if (!activity?.blocks) return;
+
+    fetch("js/practice_projects/hcb_level1.tb")
+      .then(res => res.text())
+      .then(data => {
+        const projectData = JSON.parse(data);
+        console.log("Loaded project:", projectData);
+        activity.sendAllToTrash(false, true);
+        activity.blocks.loadNewBlocks(projectData);
+        activity.blocks.adjustDocks();
+        activity.refreshCanvas();
+
+      })
+      .catch(err => {
+        console.error("Failed to load practice project", err);
+      });
+  },
+
   renderLevelMenu() {
     const container = document.getElementById("practice-content");
 
@@ -51,19 +78,18 @@ export const PracticeUI = {
   renderLevel(level) {
     const problem = PracticeProblems.find(p => p.level === level);
     const container = document.getElementById("practice-content");
-
+    
     container.innerHTML = `
-      <button id="back-to-levels">← Back</button>
-
+    <button id="back-to-levels">← Back</button>
+    
       <h2>Level ${problem.level}</h2>
       <h4>${problem.title}</h4>
       <p>${problem.description}</p>
 
-      <img src="${problem.image}" class="practice-ref"/>
-
       <button id="check-level">Check My Work</button>
     `;
-
+    this.loadStarterBlocks(level);
+    
     document.getElementById("back-to-levels").onclick = () => {
       this.renderLevelMenu();
     };

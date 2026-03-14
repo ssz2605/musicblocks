@@ -15,18 +15,14 @@ function getActivity() {
 export const PracticeValidator = {
 
     validate(problem) {
-        console.log("🧪 validate called for level:", problem.level);
-        console.log("📚 Available LevelExpected keys:", Object.keys(LevelExpected));
-
         const levelKey = String(problem.level);
-        console.log("levelKey:", levelKey);
-        console.log("LevelExpected[levelKey]:", LevelExpected[levelKey]);
-
         const activity = getActivity();
         if (!activity) return false;
 
+        if (problem.expected?.pattern){
+            return this.validatePattern(problem.expected.pattern);
+        }
         if (LevelExpected[levelKey] !== undefined) {
-            console.log("🔥 Entering structure validation for level:", levelKey);
             return this.validateStructure(levelKey);
         }
 
@@ -34,34 +30,65 @@ export const PracticeValidator = {
         return this.validateBasic(problem);
     },
 
+    validatePattern(expectedPattern) {
+        const activity = getActivity();
+        if (!activity?.blocks?.blockList) return false;
+        const blockList = activity.blocks.blockList;
+        const startBlock = Object.values(blockList).find(
+            b => b?.name === "start" && !b.trash
+        );
+        if (!startBlock) return false;
+        const sequence = [];
+        let currentId = startBlock.connections?.[1];
+
+        while (currentId) {
+            const block = blockList[currentId];
+            if (!block) break;
+            if (block.name === "nameddo") {
+                const name = block.overrideName || block.privateData;
+                sequence.push(name);
+                currentId = block.connections?.[1] || null;
+                continue;
+            }
+
+            if (block.name === "repeat") {
+                const timesId = block.connections?.[1];
+                const times = blockList[timesId]?.value || 1;
+                let childId = block.connections?.[2];
+                const body = [];
+                while (childId) {
+                    const child = blockList[childId];
+                    if (!child) break;
+                    if (child.name === "nameddo") {
+                        const name = child.overrideName || child.privateData;
+                        body.push(name);
+                    }
+                    childId = child.connections?.[3];
+                }
+                for (let i = 0; i < times; i++) {
+                    sequence.push(...body);
+                }
+                currentId = block.connections?.[3] || null;
+                continue;
+            }
+            currentId = null;
+        }
+        return JSON.stringify(sequence) === JSON.stringify(expectedPattern);
+    },
+
     validateStructure(levelKey) {
         const activity = getActivity();
         if (!activity) {
-            console.log("❌ No activity found");
             return false;
         }
-
         if (!activity.blocks?.blockList) {
-            console.log("❌ No blockList found on activity");
             return false;
         }
 
         const blockList = activity.blocks.blockList;
-        console.log("📦 Raw blockList:", blockList);
-
         const userStructure = this.extractActions(blockList);
-        console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━");
-        console.log("🌳 USER STRUCTURE:");
-        console.log(JSON.stringify(userStructure, null, 2));
-
         const expected = LevelExpected[levelKey];
-        console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━");
-        console.log("📘 EXPECTED STRUCTURE:");
-        console.log(JSON.stringify(expected, null, 2));
-        console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━");
-
         if (userStructure.length !== expected.length) {
-            console.log("❌ Action count mismatch");
             return false;
         }
 
@@ -72,20 +99,11 @@ export const PracticeValidator = {
             this.normalize(userStructure),
             this.normalize(expected)
         );
-        console.log("🆚 FINAL COMPARISON RESULT:", result);
-
-        if (!result) {
-            console.log("🔍 USER JSON:", JSON.stringify(userStructure, null, 2));
-            console.log("🔍 EXPECTED JSON:", JSON.stringify(expected, null, 2));
-        }
-
         return result;
     },
 
     extractActions(blockList) {
         const actions = [];
-        console.log("🔍 Checking for note blocks in workspace:");
-
         for (const id in blockList) {
             const block = blockList[id];
             if (!block || block.trash) continue;
@@ -93,19 +111,9 @@ export const PracticeValidator = {
                 block.name &&
                 block.name.toLowerCase().includes("note") &&
                 block.container?.visible !== false
-            ) {
-                console.log(
-                    "🎵 Found NOTE block ID:",
-                    id,
-                    "name:",
-                    block.name,
-                    "connections:",
-                    block.connections
-                );
-            }
+            ) {}
 
             if (block.name === "action") {
-
                 const textId = block.connections?.[1];
                 const textBlock = blockList[textId];
                 const actionName = textBlock?.value || null;
@@ -114,12 +122,8 @@ export const PracticeValidator = {
                 const hiddenId = block.connections?.[2];
                 const hiddenBlock = blockList[hiddenId];
 
-                console.log("🟣 Hidden block:", hiddenBlock?.connections);
-
                 // STEP 2: hidden block connection[1] is first body block
                 const firstBodyId = hiddenBlock?.connections?.[1];
-
-                console.log("🟢 First body ID:", firstBodyId);
 
                 actions.push({
                     type: "action",
@@ -132,15 +136,11 @@ export const PracticeValidator = {
     },
 
     walkBlock(block, blockList) {
-        console.log("➡️ Walking block:", block.name, "ID:", block.id);
-        console.log("   connections:", block.connections);
 
         if (block.name === "action") {
-
             const textId = block.connections?.[1];
             const textBlock = blockList[textId];
             const actionName = textBlock?.value || null;
-
             const firstBodyId = block.connections?.[3];
 
             return {
@@ -190,14 +190,9 @@ export const PracticeValidator = {
         const result = [];
         let currentId = startId;
 
-        console.log("🧭 Starting walkSequence from ID:", startId);
-
         while (currentId) {
             const current = blockList[currentId];
             if (!current || current.trash) break;
-
-            console.log("   🔁 Visiting:", currentId, current.name);
-
             const node = this.walkBlock(current, blockList);
             if (node) result.push(node);
 

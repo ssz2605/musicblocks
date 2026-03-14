@@ -1,21 +1,31 @@
 export const PracticeProblems = [
   {
     level: 1,
-    title: "Hot Cross Buns – Part A",
+    title: "Hot Cross Buns – Discover the Form",
     description: `
-        To explore structure, we will recreate the first part of the melody
-        <strong>Hot Cross Buns</strong>.
+      Hot Cross Buns has a simple musical form.
 
-        Your task:
-        • Observe the block structure shown
-        • Use only the blocks already on the screen
-        • Recreate the same musical structure
-        • Do not add extra blocks
-    `,
-    image: "images/practice/Level1.png",
+      Two musical chunks are already on the screen:
+
+      A = HCB  
+      B = Penny  
+
+      Your task:
+
+      1. Arrange the blocks under the Start block to recreate the melody.
+      2. The melody structure is **A A B A**.
+      3. You can use the **repeat block** to help build the pattern.
+      4. Press Play to hear your melody.
+
+      Once you recreate the correct pattern, explore further:
+
+      • Change octaves  
+      • Change pitches  
+      • Try invert or transpose blocks  
+      • Make your own variations
+      `,
     expected: {
-      blocks: ["start", "note", "pitch"],
-      minNotes: 3
+      pattern: ["A", "A", "B", "A"]
     },
     badgeGroup: "melody_basics"
   },
