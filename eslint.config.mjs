@@ -55,5 +55,12 @@ export default [
         languageOptions: {
             sourceType: "module"
         }
+    },
+
+    {
+        files: ["js/practice/**/*.js"],
+        languageOptions: {
+            sourceType: "module"
+        }
     }
 ];

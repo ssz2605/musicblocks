@@ -1,8 +1,8 @@
 export const PracticeProblems = [
-  {
-    level: 1,
-    title: "Hot Cross Buns – Discover the Form",
-    description: `
+    {
+        level: 1,
+        title: "Hot Cross Buns – Discover the Form",
+        description: `
       <p><b>Hot Cross Buns</b> has a simple musical form.</p>
 
       <p>Two musical chunks are already on the screen:</p>
@@ -30,16 +30,16 @@ export const PracticeProblems = [
         <li>Make your own variations</li>
       </ul>
     `,
-    expected: {
-      pattern: ["A", "A", "B", "A"]
+        expected: {
+            pattern: ["A", "A", "B", "A"]
+        },
+        badgeGroup: "melody_basics"
     },
-    badgeGroup: "melody_basics"
-  },
 
-  {
-    level: 2,
-    title: "Sakura Sakura",
-    description: `
+    {
+        level: 2,
+        title: "Sakura Sakura",
+        description: `
       <p><b>Sakura Sakura – Discover the Melody</b></p>
 
       <p>
@@ -73,26 +73,55 @@ export const PracticeProblems = [
         <li>Create your own variation of the melody</li>
       </ul>
     `,
-    expected: {
-      pattern: ["A", "A", "B", "A"]
+        expected: {
+            pattern: [
+                "Sakura",
+                "yayoi",
+                "miwatasu",
+                "yayoi",
+                "miwatasu",
+                "Sakura",
+                "miniyukan",
+                "Sakura",
+                "yayoi",
+                "miwatasu",
+                "yayoi",
+                "miwatasu",
+                "Sakura",
+                "miniyukan",
+                "Sakura",
+                "yayoi",
+                "miwatasu",
+                "yayoi",
+                "miwatasu",
+                "Sakura",
+                "miniyukan",
+                "Sakura",
+                "yayoi",
+                "miwatasu",
+                "yayoi",
+                "miwatasu",
+                "Sakura",
+                "miniyukan"
+            ]
+        },
+        badgeGroup: "melody_basics"
     },
-    badgeGroup: "melody_basics"
-  },
 
-  {
-    level: 3,
-    title: "Music + Motion",
-    description: `
+    {
+        level: 3,
+        title: "Music + Motion",
+        description: `
 Music Blocks allows music and motion together.
 
 Your task:
 • Add a motion block inside a musical note
 • Music and drawing should happen together
     `,
-    image: "images/practice/music_and_motion.png",
-    expected: {
-      graphicsInsideNote: true
-    },
-    badgeGroup: "music_and_motion"
-  }
+        image: "images/practice/music_and_motion.png",
+        expected: {
+            graphicsInsideNote: true
+        },
+        badgeGroup: "music_and_motion"
+    }
 ];

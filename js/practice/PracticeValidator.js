@@ -1,8 +1,10 @@
 import { LevelExpected } from "./levelExpected.js";
 
 function getActivity() {
-    if (typeof globalActivity !== "undefined" && globalActivity?.blocks) {
-        return globalActivity;
+    const globalActivityRef = globalThis.globalActivity;
+
+    if (globalActivityRef?.blocks) {
+        return globalActivityRef;
     }
 
     if (window.activity?.blocks) {
@@ -13,13 +15,12 @@ function getActivity() {
 }
 
 export const PracticeValidator = {
-
     validate(problem) {
         const levelKey = String(problem.level);
         const activity = getActivity();
         if (!activity) return false;
 
-        if (problem.expected?.pattern){
+        if (problem.expected?.pattern) {
             return this.validatePattern(problem.expected.pattern);
         }
         if (LevelExpected[levelKey] !== undefined) {
@@ -34,46 +35,74 @@ export const PracticeValidator = {
         const activity = getActivity();
         if (!activity?.blocks?.blockList) return false;
         const blockList = activity.blocks.blockList;
-        const startBlock = Object.values(blockList).find(
-            b => b?.name === "start" && !b.trash
-        );
+        const startBlock = Object.values(blockList).find(b => b?.name === "start" && !b.trash);
         if (!startBlock) return false;
+
+        const sequence = this.extractPatternSequence(startBlock.connections?.[1], blockList);
+        return JSON.stringify(sequence) === JSON.stringify(expectedPattern);
+    },
+
+    extractPatternSequence(startId, blockList) {
         const sequence = [];
-        let currentId = startBlock.connections?.[1];
+        let currentId = this.unwrapHiddenFlow(startId, blockList);
 
         while (currentId) {
             const block = blockList[currentId];
-            if (!block) break;
+            if (!block || block.trash) break;
+
             if (block.name === "nameddo") {
                 const name = block.overrideName || block.privateData;
-                sequence.push(name);
-                currentId = block.connections?.[1] || null;
+                if (name) {
+                    sequence.push(name);
+                }
+                currentId = this.getNextPatternBlockId(block, blockList);
                 continue;
             }
 
             if (block.name === "repeat") {
                 const timesId = block.connections?.[1];
-                const times = blockList[timesId]?.value || 1;
-                let childId = block.connections?.[2];
-                const body = [];
-                while (childId) {
-                    const child = blockList[childId];
-                    if (!child) break;
-                    if (child.name === "nameddo") {
-                        const name = child.overrideName || child.privateData;
-                        body.push(name);
-                    }
-                    childId = child.connections?.[3];
-                }
+                const times = Number(blockList[timesId]?.value) || 1;
+                const body = this.extractPatternSequence(block.connections?.[2], blockList);
+
                 for (let i = 0; i < times; i++) {
                     sequence.push(...body);
                 }
-                currentId = block.connections?.[3] || null;
+
+                currentId = this.unwrapHiddenFlow(block.connections?.[3], blockList);
                 continue;
             }
-            currentId = null;
+
+            if (block.name === "hidden") {
+                currentId = this.unwrapHiddenFlow(block.connections?.[1], blockList);
+                continue;
+            }
+
+            break;
         }
-        return JSON.stringify(sequence) === JSON.stringify(expectedPattern);
+
+        return sequence;
+    },
+
+    unwrapHiddenFlow(blockId, blockList) {
+        let currentId = blockId || null;
+        let guard = 0;
+
+        while (currentId && guard < 20) {
+            const block = blockList[currentId];
+            if (!block || block.trash) return null;
+            if (block.name !== "hidden") return currentId;
+            currentId = block.connections?.[1] || null;
+            guard++;
+        }
+
+        return currentId;
+    },
+
+    getNextPatternBlockId(block, blockList) {
+        return this.unwrapHiddenFlow(
+            block.connections?.[1] || block.connections?.[3] || null,
+            blockList
+        );
     },
 
     validateStructure(levelKey) {
@@ -95,10 +124,7 @@ export const PracticeValidator = {
         userStructure.sort((a, b) => a.name.localeCompare(b.name));
         expected.sort((a, b) => a.name.localeCompare(b.name));
 
-        const result = this.deepEqual(
-            this.normalize(userStructure),
-            this.normalize(expected)
-        );
+        const result = this.deepEqual(this.normalize(userStructure), this.normalize(expected));
         return result;
     },
 
@@ -107,11 +133,6 @@ export const PracticeValidator = {
         for (const id in blockList) {
             const block = blockList[id];
             if (!block || block.trash) continue;
-            if (
-                block.name &&
-                block.name.toLowerCase().includes("note") &&
-                block.container?.visible !== false
-            ) {}
 
             if (block.name === "action") {
                 const textId = block.connections?.[1];
@@ -136,7 +157,6 @@ export const PracticeValidator = {
     },
 
     walkBlock(block, blockList) {
-
         if (block.name === "action") {
             const textId = block.connections?.[1];
             const textBlock = blockList[textId];
@@ -151,7 +171,6 @@ export const PracticeValidator = {
         }
 
         if (block.name === "repeat") {
-
             const timesId = block.connections?.[1];
             const times = blockList[timesId]?.value ?? null;
 
@@ -216,7 +235,6 @@ export const PracticeValidator = {
     },
 
     findPitch(noteBlock, blockList) {
-
         // newnote connection[2] → vspace
         const vspaceId = noteBlock.connections?.[2];
         const vspaceBlock = blockList[vspaceId];
@@ -255,7 +273,6 @@ export const PracticeValidator = {
         return JSON.stringify(a) === JSON.stringify(b);
     },
 
-
     validateBasic(problem) {
         const activity = getActivity();
         if (!activity) return false;
@@ -281,15 +298,11 @@ export const PracticeValidator = {
     },
 
     hasBlock(blockList, name) {
-        return Object.values(blockList).some(
-            b => b && b.name === name && !b.trash
-        );
+        return Object.values(blockList).some(b => b && b.name === name && !b.trash);
     },
 
     countNotes(blockList) {
-        return Object.values(blockList).filter(
-            b => b?.name?.includes("note") && !b.trash
-        ).length;
+        return Object.values(blockList).filter(b => b?.name?.includes("note") && !b.trash).length;
     },
 
     hasGraphicsInsideNote(blockList) {
