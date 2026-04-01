@@ -1,7 +1,7 @@
 export const PracticeProblems = [
     {
         level: 1,
-        title: "Hot Cross Buns – Discover the Form",
+        title: "Hot Cross Buns - Discover the Form",
         description: `
       <p><b>Hot Cross Buns</b> has a simple musical form.</p>
 
@@ -40,10 +40,10 @@ export const PracticeProblems = [
         level: 2,
         title: "Sakura Sakura",
         description: `
-      <p><b>Sakura Sakura – Discover the Melody</b></p>
+      <p><b>Sakura Sakura - Discover the Melody</b></p>
 
       <p>
-      "Sakura Sakura" is a famous traditional song from <b>Japan</b>.  
+      "Sakura Sakura" is a famous traditional song from <b>Japan</b>.
       In this activity, you will recreate the melody using musical blocks.
       </p>
 
@@ -60,7 +60,7 @@ export const PracticeProblems = [
 
       <ol>
         <li>Arrange the blocks under the <b>Start</b> block.</li>
-        <li>The melody structure is <b>Sakura yayoi miwatasu yayoi miwatasu Sakura miniyukan, and repeat this melody 4 times.</b>.</li>
+        <li>The melody structure is <b>Sakura yayoi miwatasu yayoi miwatasu Sakura miniyukan</b>, and repeat this melody 4 times.</li>
         <li>You may use the <b>repeat block</b> to help build the pattern.</li>
         <li>Press <b>Play</b> to hear your melody.</li>
       </ol>
@@ -110,18 +110,34 @@ export const PracticeProblems = [
 
     {
         level: 3,
-        title: "Music + Motion",
+        title: "Beat and Rhythm with Rhythm Maker",
         description: `
-Music Blocks allows music and motion together.
+      <p><b>Beat</b> is the steady pulse of music. <b>Rhythm</b> is the pattern of long and short sounds played on that beat.</p>
 
-Your task:
-• Add a motion block inside a musical note
-• Music and drawing should happen together
+      <p>This level helps you move from arranging ready-made blocks to creating your own rhythm in Music Blocks.</p>
+
+      <p><b>Your task:</b></p>
+
+      <ol>
+        <li>Open <b>Rhythm Maker</b>.</li>
+        <li>Create a steady beat and try a few rhythm variations.</li>
+        <li>Click <b>Save rhythms</b> to export your rhythm as an <b>action block</b>.</li>
+        <li> Open the action palette and find your exported rhythm block under the <b>Actions</b> section.</li>
+        <li>Use the exported action block under the <b>Start</b> block to make your composition.</li>
+        <li>Press <b>Play</b> and listen to your result.</li>
+      </ol>
+
+      <p><b>Think about:</b></p>
+
+      <ul>
+        <li>Which part feels like the steady beat?</li>
+        <li>Which part shows rhythm changes?</li>
+        <li>How does the sound change when notes become shorter or longer?</li>
+      </ul>
     `,
-        image: "images/practice/music_and_motion.png",
         expected: {
-            graphicsInsideNote: true
+            rhythmMakerWorkflow: true
         },
-        badgeGroup: "music_and_motion"
+        badgeGroup: "rhythm_basics"
     }
 ];

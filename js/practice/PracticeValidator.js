@@ -21,6 +21,10 @@ export const PracticeValidator = {
         const activity = getActivity();
         if (!activity) return false;
 
+        if (problem.expected?.rhythmMakerWorkflow || levelKey === "3") {
+            return this.validateRhythmMakerWorkflow();
+        }
+
         if (problem.expected?.pattern) {
             return this.validatePattern(problem.expected.pattern);
         }
@@ -104,6 +108,107 @@ export const PracticeValidator = {
             block.connections?.[1] || block.connections?.[3] || null,
             blockList
         );
+    },
+
+    validateRhythmMakerWorkflow() {
+        const activity = getActivity();
+        if (!activity?.blocks?.blockList) return false;
+
+        const blockList = activity.blocks.blockList;
+        const exportedActions = this.getRhythmMakerActionNames(blockList);
+        if (exportedActions.size === 0) return false;
+
+        const referencedActions = this.getStartActionReferences(blockList);
+        for (const actionName of referencedActions) {
+            if (exportedActions.has(actionName)) {
+                return true;
+            }
+        }
+
+        return false;
+    },
+
+    getRhythmMakerActionNames(blockList) {
+        const exportedActions = new Set();
+
+        for (const block of Object.values(blockList)) {
+            if (!block || block.trash || block.name !== "action") continue;
+
+            const actionName = this.getActionName(block, blockList);
+            const firstBodyId = this.getActionBodyStartId(block, blockList);
+            if (!actionName || !firstBodyId) continue;
+
+            if (this.actionLooksLikeRhythmMakerExport(firstBodyId, blockList)) {
+                exportedActions.add(actionName);
+            }
+        }
+
+        return exportedActions;
+    },
+
+    getActionName(actionBlock, blockList) {
+        const textId = actionBlock.connections?.[1];
+        return blockList[textId]?.value || null;
+    },
+
+    getActionBodyStartId(actionBlock, blockList) {
+        const hiddenId = actionBlock.connections?.[2];
+        const hiddenBlock = blockList[hiddenId];
+        return hiddenBlock?.connections?.[1] || null;
+    },
+
+    actionLooksLikeRhythmMakerExport(startId, blockList) {
+        let currentId = this.unwrapHiddenFlow(startId, blockList);
+        let guard = 0;
+
+        while (currentId && guard < 100) {
+            const block = blockList[currentId];
+            if (!block || block.trash) return false;
+
+            if (block.name === "rhythm2") {
+                return true;
+            }
+
+            currentId = this.unwrapHiddenFlow(block.connections?.[3], blockList);
+            guard++;
+        }
+
+        return false;
+    },
+
+    getStartActionReferences(blockList) {
+        const references = new Set();
+
+        for (const block of Object.values(blockList)) {
+            if (!block || block.trash || block.name !== "nameddo") continue;
+            if (!this.hasAncestorNamed(block, blockList, "start")) continue;
+
+            const actionName = block.overrideName || block.privateData || block.value;
+            if (actionName) {
+                references.add(actionName);
+            }
+        }
+
+        return references;
+    },
+
+    hasAncestorNamed(block, blockList, ancestorName) {
+        let current = block;
+        let guard = 0;
+
+        while (current && guard < 50) {
+            const parentId = current.connections?.[0];
+            if (parentId === null || parentId === undefined) return false;
+
+            const parent = blockList[parentId];
+            if (!parent || parent.trash) return false;
+            if (parent.name === ancestorName) return true;
+
+            current = parent;
+            guard++;
+        }
+
+        return false;
     },
 
     validateStructure(levelKey) {
