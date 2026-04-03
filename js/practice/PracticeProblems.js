@@ -256,29 +256,68 @@ export const PracticeProblems = [
         level: 7,
         title: "Geometry and Rhythm III - Whole Note Circle",
         description: `
-      <p>Now connect geometry to rhythm directly. Think of a whole note like a whole pizza or a whole circle. Dividing the note is like dividing the circle into equal parts.</p>
+      <p>Now connect your shape-generator idea to rhythm. Think of a <b>whole note</b> like a whole pizza or a whole circle. If you divide the whole note into equal parts, you can also divide the circle into equal parts.</p>
 
-      <p>Instead of drawing straight-sided shapes, you will draw a circle over time.</p>
+      <p>In this level, you will build a program that draws a circle <b>over time</b>. The same number should control:</p>
+
+      <ul>
+        <li>how many rhythm parts the whole note is divided into</li>
+        <li>how many equal arc pieces the circle is divided into</li>
+      </ul>
+
+      <p><b>You will already see these blocks on the screen:</b></p>
+
+      <ul>
+        <li><b>Start</b></li>
+        <li><b>store in box1</b> and <b>box1</b></li>
+        <li><b>store in box2</b> and <b>box2</b></li>
+        <li><b>repeat</b></li>
+        <li><b>note value</b></li>
+        <li><b>drum</b></li>
+        <li><b>arc</b></li>
+        <li><b>divide</b></li>
+        <li><b>add 1 to box1</b></li>
+        <li><b>add 10 to box2</b></li>
+        <li><b>add 10 to color</b></li>
+      </ul>
+
+      <p><b>What should box1 and box2 do?</b></p>
+
+      <ul>
+        <li>Use <b>box1</b> to decide how many equal rhythm parts and arc parts you want.</li>
+        <li>Use <b>box2</b> for the radius so each new circle can become bigger.</li>
+      </ul>
 
       <p><b>Your task:</b></p>
 
       <ol>
-        <li>Use a <b>note value</b> block so the drawing happens over time.</li>
-        <li>Use <b>box1</b> as the denominator for the note value.</li>
-        <li>Inside the note, use a <b>drum</b> and an <b>arc</b> block.</li>
+        <li>Build one automatic circle generator with <b>one Start block</b>.</li>
+        <li>Use an <b>outer repeat</b> with a normal number so your program makes several circles.</li>
+        <li>Inside it, use <b>repeat box1</b> so each circle is divided into equal parts.</li>
+        <li>Put a <b>note value</b> block inside the inner repeat.</li>
+        <li>Make the note value use <b>1 / box1</b>.</li>
+        <li>Inside the <b>note</b>, place a <b>drum</b> and an <b>arc</b>.</li>
         <li>Make the arc angle use <b>360 / box1</b>.</li>
-        <li>Repeat the note so the circle is divided into equal musical parts.</li>
+        <li>Use <b>box2</b> as the radius.</li>
+        <li>After one full circle, use <b>add 1 to box1</b> so the next circle has more slices.</li>
+        <li>Use <b>add 10 to box2</b> so the next circle becomes clearly bigger.</li>
+        <li>Use <b>add 10 to color</b> so the circles look different. You can place this either inside the inner repeat or after the inner repeat.</li>
       </ol>
+
+      <p><b>Rough idea for how to connect the blocks:</b></p>
+
+      <p><b>Start</b> -> store a number in <b>box1</b> -> store a number in <b>box2</b> -> <b>outer repeat</b> -> <b>inner repeat box1</b> -> <b>note value 1 / box1</b> -> inside that <b>note</b> put <b>drum</b> and <b>arc</b> -> make the arc use <b>360 / box1</b> and radius <b>box2</b> -> after one full circle, <b>add 1 to box1</b>, <b>add 10 to box2</b>, and use <b>add 10 to color</b>.</p>
 
       <p><b>Think about:</b></p>
 
       <ul>
-        <li>How does changing <b>box1</b> change both the rhythm and the drawing?</li>
+        <li>How does changing <b>box1</b> change both the rhythm and the circle?</li>
         <li>Which note values feel faster? Which feel slower?</li>
-        <li>How does a whole circle relate to a whole note?</li>
+        <li>How does changing <b>box2</b> change the drawing?</li>
+        <li>What happens when the color changes after each repeat?</li>
       </ul>
 
-      <p><b>Level check:</b> your project should connect note value and circle division by using <b>box1</b> in both the note value and the arc angle.</p>
+      <p><b>Level check:</b> your project should show one automatic whole-note circle generator with an <b>outer repeat</b> for many circles and an <b>inner repeat box1</b> for dividing each circle. The <b>drum</b> and <b>arc</b> must be inside the <b>note</b>. It should use <b>box1</b> in both the note value and the arc angle, use <b>box2</b> for radius, then change <b>box1</b>, <b>box2</b>, and the color so the next circles have more slices, bigger radius, and different colors.</p>
     `,
         expected: {
             cyclicWholeNote: true

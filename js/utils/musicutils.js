@@ -4090,7 +4090,14 @@ const GetNotesForInterval = tur => {
 function base64Encode(str) {
     const encoder = new TextEncoder();
     const uint8Array = encoder.encode(str);
-    const binaryString = String.fromCharCode(...uint8Array);
+    const chunkSize = 0x8000;
+    let binaryString = "";
+
+    for (let i = 0; i < uint8Array.length; i += chunkSize) {
+        const chunk = uint8Array.subarray(i, i + chunkSize);
+        binaryString += String.fromCharCode.apply(null, chunk);
+    }
+
     return binaryString;
 }
 

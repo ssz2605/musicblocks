@@ -122,30 +122,13 @@ export const PracticeValidator = {
 
     validateCyclicWholeNote() {
         const blockList = this.getBlockList();
-        if (!this.hasBoxInitialization(blockList, "box1")) return false;
+        const startBlocks = Object.values(blockList).filter(
+            block => block?.name === "start" && !block.trash
+        );
 
-        for (const block of Object.values(blockList)) {
-            if (!block || block.trash || !this.isNoteBlock(block)) continue;
-            if (!this.noteUsesBoxDenominator(block, blockList, "box1")) continue;
-            if (!this.hasRepeatAncestorUsingBox(block, blockList, "box1")) continue;
-
-            const bodyIds = this.collectSequence(
-                this.getNoteBodyStartId(block, blockList),
-                blockList
-            );
-            const hasDrum = bodyIds.some(id => blockList[id]?.name === "playdrum");
-            const hasArc = bodyIds.some(
-                id =>
-                    blockList[id]?.name === "arc" &&
-                    this.isDivideExpression(blockList[id]?.connections?.[1], blockList, 360, "box1")
-            );
-
-            if (hasDrum && hasArc) {
-                return true;
-            }
-        }
-
-        return false;
+        return startBlocks.some(startBlock =>
+            this.startBlockMatchesCyclicWholeNote(startBlock, blockList)
+        );
     },
 
     extractPatternSequence(startId, blockList) {
@@ -522,6 +505,89 @@ export const PracticeValidator = {
         };
     },
 
+    startBlockMatchesCyclicWholeNote(startBlock, blockList) {
+        const startSequence = this.collectSequence(startBlock.connections?.[1], blockList);
+        if (startSequence.length === 0) return false;
+
+        const hasBox1Initialization = startSequence.some(id =>
+            this.isBoxStoreBlock(blockList[id], blockList, "box1")
+        );
+        const hasBox2Initialization = startSequence.some(id =>
+            this.isBoxStoreBlock(blockList[id], blockList, "box2")
+        );
+
+        if (!hasBox1Initialization || !hasBox2Initialization) return false;
+
+        for (const id of startSequence) {
+            const outerRepeat = blockList[id];
+            if (!outerRepeat || outerRepeat.trash || outerRepeat.name !== "repeat") continue;
+
+            const outerRepeatCount = this.getNumericValue(outerRepeat.connections?.[1], blockList);
+            if (typeof outerRepeatCount !== "number" || outerRepeatCount < 2) continue;
+
+            const outerBodyIds = this.collectSequence(outerRepeat.connections?.[2], blockList);
+            const hasBox1Increment = outerBodyIds.some(bodyId =>
+                this.isBoxIncrementBlock(blockList[bodyId], blockList, "box1")
+            );
+            const hasRadiusIncrement = outerBodyIds.some(bodyId =>
+                this.isIncrementTargetingBoxWithStep(blockList[bodyId], blockList, "box2", 10)
+            );
+            const hasColorIncrement = outerBodyIds.some(bodyId =>
+                this.isIncrementTargetingBlock(blockList[bodyId], blockList, "color")
+            );
+
+            const innerRepeat = outerBodyIds
+                .map(bodyId => blockList[bodyId])
+                .find(
+                    candidate =>
+                        candidate &&
+                        !candidate.trash &&
+                        candidate.name === "repeat" &&
+                        this.isBoxReference(candidate.connections?.[1], blockList, "box1")
+                );
+
+            if (!innerRepeat) continue;
+
+            const innerBodyIds = this.collectSequence(innerRepeat.connections?.[2], blockList);
+            const hasInnerColorIncrement = innerBodyIds.some(bodyId =>
+                this.isIncrementTargetingBlock(blockList[bodyId], blockList, "color")
+            );
+            const noteBlock = innerBodyIds
+                .map(bodyId => blockList[bodyId])
+                .find(candidate => candidate && !candidate.trash && this.isNoteBlock(candidate));
+
+            if (!noteBlock) continue;
+            if (!this.noteUsesBoxDenominator(noteBlock, blockList, "box1")) continue;
+
+            const noteBodyIds = this.collectSequence(
+                this.getNoteBodyStartId(noteBlock, blockList),
+                blockList
+            );
+            const hasDrum = noteBodyIds.some(bodyId => blockList[bodyId]?.name === "playdrum");
+            const hasArc = noteBodyIds.some(bodyId => {
+                const arcBlock = blockList[bodyId];
+                return (
+                    arcBlock?.name === "arc" &&
+                    this.isDivideExpression(arcBlock.connections?.[1], blockList, 360, "box1") &&
+                    this.isBoxReference(arcBlock.connections?.[2], blockList, "box2")
+                );
+            });
+
+            if (
+                hasDrum &&
+                hasArc &&
+                (hasColorIncrement || hasInnerColorIncrement) &&
+                hasBox1Increment &&
+                hasRadiusIncrement &&
+                (hasColorIncrement || hasInnerColorIncrement)
+            ) {
+                return true;
+            }
+        }
+
+        return false;
+    },
+
     repeatBodyMatchesBoxPolygon(repeatBlock, blockList, boxName) {
         const bodyIds = this.collectSequence(repeatBlock.connections?.[2], blockList);
         const hasForward = bodyIds.some(id => blockList[id]?.name === "forward");
@@ -718,6 +784,28 @@ export const PracticeValidator = {
         if (block.name !== "increment" && block.name !== "incrementOne") return false;
 
         return this.isBoxReference(block.connections?.[1], blockList, boxName);
+    },
+
+    isIncrementTargetingBlock(block, blockList, blockName) {
+        if (!block || block.trash) return false;
+        if (block.name !== "increment" && block.name !== "incrementOne") return false;
+
+        const targetBlock = blockList[block.connections?.[1]];
+        return !!(targetBlock && !targetBlock.trash && targetBlock.name === blockName);
+    },
+
+    isIncrementTargetingBoxWithStep(block, blockList, boxName, step) {
+        if (!block || block.trash) return false;
+        if (block.name === "incrementOne") {
+            return step === 1 && this.isBoxReference(block.connections?.[1], blockList, boxName);
+        }
+
+        if (block.name !== "increment") return false;
+
+        return (
+            this.isBoxReference(block.connections?.[1], blockList, boxName) &&
+            this.getNumericValue(block.connections?.[2], blockList) === step
+        );
     },
 
     rightAngleMatchesSides(rightBlock, blockList, sides) {
