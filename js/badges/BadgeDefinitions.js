@@ -5,6 +5,7 @@ export const Badges = {
  melody_basics: { name: "Melody Basics", icon: "🎼" },
   rhythm_basics: { name: "Rhythm Basics", icon: "🥁" },
   geometry_rhythm: { name: "Geometry & Rhythm", icon: "📐" },
-  polyrhythm: { name: "Polyrhythm", icon: "🎷" }
+  polyrhythm: { name: "Polyrhythm", icon: "🎷" },
+  events_broadcast: { name: "Events & Broadcast", icon: "📡" }
 
 };

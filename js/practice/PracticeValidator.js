@@ -59,6 +59,25 @@ if (problem.expected?.boxShapeAutomation) {
         if (problem.expected?.rhythmRuler) {
             if (!this.validateRhythmRuler()) return false;
         }
+        if (problem.expected?.broadcastEvents) {
+            if (!this.validateBroadcastEvents()) return false;
+        }
+        if (problem.expected?.conductorMouse) {
+            if (!this.validateConductorMouse()) return false;
+        }
+        if (problem.expected?.drumMiceCircle) {
+            if (!this.validateDrumMiceCircle()) return false;
+        }
+        if (problem.expected?.modArithmetic) {
+            if (!this.validateModArithmetic()) return false;
+        } 
+        if (problem.expected?.clickToggle) {
+            if (!this.validateClickToggle()) return false;
+        }
+
+        if (problem.expected?.twinklePhraseMaker) {
+            return this.validateTwinklePhraseMaker();
+        }
 
         if (problem.expected?.pattern) {
             return this.validatePattern(problem.expected.pattern);
@@ -69,6 +88,22 @@ if (problem.expected?.boxShapeAutomation) {
         }
 
         return this.validateBasic(problem);
+    },
+
+    getBoxShapeAutomationDebug() {
+        const blockList = this.getBlockList();
+        const startBlocks = Object.values(blockList).filter(
+            block => block?.name === "start" && !block.trash
+        );
+
+        const startSummaries = startBlocks.map(startBlock =>
+            this.getStartBlockBoxAutomationDebug(startBlock, blockList)
+        );
+
+        return {
+            startCount: startBlocks.length,
+            startSummaries
+        };
     },
 
     validatePattern(expectedPattern) {
@@ -94,9 +129,8 @@ if (problem.expected?.boxShapeAutomation) {
         if (!actionName || !firstBodyId) continue;
 
         const bodyIds = this.collectSequence(firstBodyId, blockList);
-        const hasRhythm = bodyIds.some(id => blockList[id]?.name === "rhythm2");
-        const hasDrum = bodyIds.some(id => blockList[id]?.name === "playdrum");
-        if (hasRhythm || hasDrum) exportedActions.add(actionName);
+       const hasDrum = bodyIds.some(id => blockList[id]?.name === "playdrum");
+if (hasDrum) exportedActions.add(actionName);
     }
     if (exportedActions.size === 0) return false;
 
@@ -140,7 +174,7 @@ validatePolyrhythm() {
     return divisorsFound.has(2) && divisorsFound.has(3);
 },
 
-validateAvatarAnimation() {
+   validateAvatarAnimation() {
     const blockList = this.getBlockList();
     return Object.values(blockList).some(
         b => b && !b.trash && (b.name === "avatar" || b.name === "turtleshell")
@@ -169,6 +203,40 @@ validateRhythmRuler() {
     }
 
     return exportedActions.size >= 2;
+},
+validateBroadcastEvents() {
+    const blockList = this.getBlockList();
+    return Object.values(blockList).some(
+        b => b && !b.trash && (b.name === "broadcast" || b.name === "broadcastmsg")
+    );
+},
+
+validateConductorMouse() {
+    const blockList = this.getBlockList();
+    return Object.values(blockList).some(
+        b => b && !b.trash && b.name === "arc"
+    );
+},
+
+validateDrumMiceCircle() {
+    const blockList = this.getBlockList();
+    return Object.values(blockList).some(
+        b => b && !b.trash && b.name === "setxy"
+    );
+},
+
+validateModArithmetic() {
+    const blockList = this.getBlockList();
+    return Object.values(blockList).some(
+        b => b && !b.trash && b.name === "mod"
+    );
+},
+
+validateClickToggle() {
+    const blockList = this.getBlockList();
+    return Object.values(blockList).some(
+        b => b && !b.trash && (b.name === "storein" || b.name === "storein2")
+    );
 },
 
     validateRhythmMakerWorkflow() {
@@ -206,61 +274,72 @@ validateRhythmRuler() {
 
     validateBoxShapeAutomation() {
         const blockList = this.getBlockList();
-        if (!this.hasBoxInitialization(blockList, "box1")) return false;
+        const startBlocks = Object.values(blockList).filter(
+            block => block?.name === "start" && !block.trash
+        );
 
-        for (const block of Object.values(blockList)) {
-            if (!block || block.trash || block.name !== "repeat") continue;
-
-            const outerBody = this.collectSequence(block.connections?.[2], blockList);
-            const innerRepeat = outerBody
-                .map(id => blockList[id])
-                .find(
-                    candidate =>
-                        candidate?.name === "repeat" &&
-                        this.isBoxReference(candidate.connections?.[1], blockList, "box1")
-                );
-
-            if (!innerRepeat) continue;
-            if (!this.repeatBodyMatchesBoxPolygon(innerRepeat, blockList, "box1")) continue;
-
-            const updatesBox = outerBody.some(id =>
-                this.isBoxIncrementBlock(blockList[id], blockList, "box1")
-            );
-
-            if (updatesBox) {
-                return true;
-            }
-        }
-
-        return false;
+        return startBlocks.some(startBlock =>
+            this.startBlockMatchesBoxShapeAutomation(startBlock, blockList)
+        );
     },
 
     validateCyclicWholeNote() {
         const blockList = this.getBlockList();
-        if (!this.hasBoxInitialization(blockList, "box1")) return false;
+        const startBlocks = Object.values(blockList).filter(
+            block => block?.name === "start" && !block.trash
+        );
 
+        return startBlocks.some(startBlock =>
+            this.startBlockMatchesCyclicWholeNote(startBlock, blockList)
+        );
+    },
+
+    validateTwinklePhraseMaker() {
+        const blockList = this.getBlockList();
+        if (!this.hasBlock(blockList, "matrix")) return false;
+
+        const expectedSections = {
+            A1: ["do4", "do4", "sol4", "sol4", "la4", "la4", "sol4"],
+            A2: ["fa4", "fa4", "mi4", "mi4", "re4", "re4", "do4"],
+            B: ["sol4", "sol4", "fa4", "fa4", "mi4", "mi4", "re4"]
+        };
+
+        const actionSectionByName = new Map();
         for (const block of Object.values(blockList)) {
-            if (!block || block.trash || !this.isNoteBlock(block)) continue;
-            if (!this.noteUsesBoxDenominator(block, blockList, "box1")) continue;
-            if (!this.hasRepeatAncestorUsingBox(block, blockList, "box1")) continue;
+            if (!block || block.trash || block.name !== "action") continue;
 
-            const bodyIds = this.collectSequence(
-                this.getNoteBodyStartId(block, blockList),
-                blockList
-            );
-            const hasDrum = bodyIds.some(id => blockList[id]?.name === "playdrum");
-            const hasArc = bodyIds.some(
-                id =>
-                    blockList[id]?.name === "arc" &&
-                    this.isDivideExpression(blockList[id]?.connections?.[1], blockList, 360, "box1")
-            );
+            const actionName = this.getActionName(block, blockList);
+            const actionBodyStartId = this.getActionBodyStartId(block, blockList);
+            const pitchSequence = this.getPitchSequence(actionBodyStartId, blockList);
+            if (!actionName || pitchSequence.length === 0) continue;
 
-            if (hasDrum && hasArc) {
-                return true;
+            for (const [sectionName, expectedSequence] of Object.entries(expectedSections)) {
+                if (this.pitchSequencesEqual(pitchSequence, expectedSequence)) {
+                    actionSectionByName.set(actionName, sectionName);
+                    break;
+                }
             }
         }
 
-        return false;
+        const hasAllSections = ["A1", "A2", "B"].every(requiredSection =>
+            Array.from(actionSectionByName.values()).includes(requiredSection)
+        );
+        if (!hasAllSections) return false;
+
+        const startBlock = Object.values(blockList).find(
+            block => block?.name === "start" && !block.trash
+        );
+        if (!startBlock) return false;
+
+        const actionReferences = this.extractPatternSequence(
+            startBlock.connections?.[1],
+            blockList
+        );
+        const sectionSequence = actionReferences.map(actionName =>
+            actionSectionByName.get(actionName)
+        );
+
+        return this.pitchSequencesEqual(sectionSequence, ["A1", "A2", "B", "B", "A1", "A2"]);
     },
 
     extractPatternSequence(startId, blockList) {
@@ -464,8 +543,15 @@ validateRhythmRuler() {
     },
 
     getActionBodyStartId(actionBlock, blockList) {
-        const hiddenBlock = blockList[actionBlock.connections?.[2]];
-        return hiddenBlock?.connections?.[1] || null;
+        const bodyStartId = actionBlock.connections?.[2];
+        const bodyStartBlock = blockList[bodyStartId];
+        if (!bodyStartBlock || bodyStartBlock.trash) return null;
+
+        if (bodyStartBlock.name === "hidden") {
+            return bodyStartBlock.connections?.[1] || null;
+        }
+
+        return bodyStartId;
     },
 
     getRhythmMakerActionNames(blockList) {
@@ -484,6 +570,27 @@ validateRhythmRuler() {
         }
 
         return exportedActions;
+    },
+
+    getPitchSequence(startId, blockList) {
+        const ids = this.collectSequence(startId, blockList);
+        const sequence = [];
+
+        for (const id of ids) {
+            const block = blockList[id];
+            if (!this.isNoteBlock(block)) continue;
+
+            const pitch = this.findPitch(block, blockList);
+            if (pitch) {
+                sequence.push(pitch.toLowerCase());
+            }
+        }
+
+        return sequence;
+    },
+
+    pitchSequencesEqual(a, b) {
+        return JSON.stringify(a) === JSON.stringify(b);
     },
 
     actionLooksLikeRhythmMakerExport(startId, blockList) {
@@ -556,6 +663,173 @@ validateRhythmRuler() {
         }
 
         return matchedSides;
+    },
+
+    startBlockMatchesBoxShapeAutomation(startBlock, blockList) {
+        const startSequence = this.collectSequence(startBlock.connections?.[1], blockList);
+        if (startSequence.length === 0) return false;
+
+        const hasBoxInitialization = startSequence.some(id =>
+            this.isBoxStoreBlock(blockList[id], blockList, "box1")
+        );
+        if (!hasBoxInitialization) return false;
+
+        for (const id of startSequence) {
+            const block = blockList[id];
+            if (!block || block.trash || block.name !== "repeat") continue;
+
+            const repeatCount = this.getNumericValue(block.connections?.[1], blockList);
+            if (typeof repeatCount !== "number" || repeatCount < 2) continue;
+
+            const outerBodyIds = this.collectSequence(block.connections?.[2], blockList);
+            const innerRepeatIndex = outerBodyIds.findIndex(
+                bodyId =>
+                    blockList[bodyId]?.name === "repeat" &&
+                    this.isBoxReference(blockList[bodyId]?.connections?.[1], blockList, "box1") &&
+                    this.repeatBodyMatchesBoxPolygon(blockList[bodyId], blockList, "box1")
+            );
+
+            if (innerRepeatIndex === -1) continue;
+
+            const hasIncrementAfterShape = outerBodyIds
+                .slice(innerRepeatIndex + 1)
+                .some(bodyId => this.isBoxIncrementBlock(blockList[bodyId], blockList, "box1"));
+
+            if (hasIncrementAfterShape) {
+                return true;
+            }
+        }
+
+        return false;
+    },
+
+    getStartBlockBoxAutomationDebug(startBlock, blockList) {
+        const startSequence = this.collectSequence(startBlock.connections?.[1], blockList);
+        const hasBoxInitialization = startSequence.some(id =>
+            this.isBoxStoreBlock(blockList[id], blockList, "box1")
+        );
+
+        const outerRepeats = startSequence
+            .map(id => blockList[id])
+            .filter(block => block && !block.trash && block.name === "repeat")
+            .map(block => {
+                const repeatCount = this.getNumericValue(block.connections?.[1], blockList);
+                const outerBodyIds = this.collectSequence(block.connections?.[2], blockList);
+                const innerRepeatIndex = outerBodyIds.findIndex(
+                    bodyId =>
+                        blockList[bodyId]?.name === "repeat" &&
+                        this.isBoxReference(
+                            blockList[bodyId]?.connections?.[1],
+                            blockList,
+                            "box1"
+                        ) &&
+                        this.repeatBodyMatchesBoxPolygon(blockList[bodyId], blockList, "box1")
+                );
+
+                const hasIncrementAfterShape =
+                    innerRepeatIndex !== -1 &&
+                    outerBodyIds
+                        .slice(innerRepeatIndex + 1)
+                        .some(bodyId =>
+                            this.isBoxIncrementBlock(blockList[bodyId], blockList, "box1")
+                        );
+
+                return {
+                    repeatCount,
+                    bodyLength: outerBodyIds.length,
+                    hasInnerRepeatBoxShape: innerRepeatIndex !== -1,
+                    hasIncrementAfterShape
+                };
+            });
+
+        return {
+            hasBoxInitialization,
+            flowLength: startSequence.length,
+            outerRepeats
+        };
+    },
+
+    startBlockMatchesCyclicWholeNote(startBlock, blockList) {
+        const startSequence = this.collectSequence(startBlock.connections?.[1], blockList);
+        if (startSequence.length === 0) return false;
+
+        const hasBox1Initialization = startSequence.some(id =>
+            this.isBoxStoreBlock(blockList[id], blockList, "box1")
+        );
+        const hasBox2Initialization = startSequence.some(id =>
+            this.isBoxStoreBlock(blockList[id], blockList, "box2")
+        );
+
+        if (!hasBox1Initialization || !hasBox2Initialization) return false;
+
+        for (const id of startSequence) {
+            const outerRepeat = blockList[id];
+            if (!outerRepeat || outerRepeat.trash || outerRepeat.name !== "repeat") continue;
+
+            const outerRepeatCount = this.getNumericValue(outerRepeat.connections?.[1], blockList);
+            if (typeof outerRepeatCount !== "number" || outerRepeatCount < 2) continue;
+
+            const outerBodyIds = this.collectSequence(outerRepeat.connections?.[2], blockList);
+            const hasBox1Increment = outerBodyIds.some(bodyId =>
+                this.isBoxIncrementBlock(blockList[bodyId], blockList, "box1")
+            );
+            const hasRadiusIncrement = outerBodyIds.some(bodyId =>
+                this.isIncrementTargetingBoxWithStep(blockList[bodyId], blockList, "box2", 10)
+            );
+            const hasColorIncrement = outerBodyIds.some(bodyId =>
+                this.isIncrementTargetingBlock(blockList[bodyId], blockList, "color")
+            );
+
+            const innerRepeat = outerBodyIds
+                .map(bodyId => blockList[bodyId])
+                .find(
+                    candidate =>
+                        candidate &&
+                        !candidate.trash &&
+                        candidate.name === "repeat" &&
+                        this.isBoxReference(candidate.connections?.[1], blockList, "box1")
+                );
+
+            if (!innerRepeat) continue;
+
+            const innerBodyIds = this.collectSequence(innerRepeat.connections?.[2], blockList);
+            const hasInnerColorIncrement = innerBodyIds.some(bodyId =>
+                this.isIncrementTargetingBlock(blockList[bodyId], blockList, "color")
+            );
+            const noteBlock = innerBodyIds
+                .map(bodyId => blockList[bodyId])
+                .find(candidate => candidate && !candidate.trash && this.isNoteBlock(candidate));
+
+            if (!noteBlock) continue;
+            if (!this.noteUsesBoxDenominator(noteBlock, blockList, "box1")) continue;
+
+            const noteBodyIds = this.collectSequence(
+                this.getNoteBodyStartId(noteBlock, blockList),
+                blockList
+            );
+            const hasDrum = noteBodyIds.some(bodyId => blockList[bodyId]?.name === "playdrum");
+            const hasArc = noteBodyIds.some(bodyId => {
+                const arcBlock = blockList[bodyId];
+                return (
+                    arcBlock?.name === "arc" &&
+                    this.isDivideExpression(arcBlock.connections?.[1], blockList, 360, "box1") &&
+                    this.isBoxReference(arcBlock.connections?.[2], blockList, "box2")
+                );
+            });
+
+            if (
+                hasDrum &&
+                hasArc &&
+                (hasColorIncrement || hasInnerColorIncrement) &&
+                hasBox1Increment &&
+                hasRadiusIncrement &&
+                (hasColorIncrement || hasInnerColorIncrement)
+            ) {
+                return true;
+            }
+        }
+
+        return false;
     },
 
     repeatBodyMatchesBoxPolygon(repeatBlock, blockList, boxName) {
@@ -754,6 +1028,28 @@ validateRhythmRuler() {
         if (block.name !== "increment" && block.name !== "incrementOne") return false;
 
         return this.isBoxReference(block.connections?.[1], blockList, boxName);
+    },
+
+    isIncrementTargetingBlock(block, blockList, blockName) {
+        if (!block || block.trash) return false;
+        if (block.name !== "increment" && block.name !== "incrementOne") return false;
+
+        const targetBlock = blockList[block.connections?.[1]];
+        return !!(targetBlock && !targetBlock.trash && targetBlock.name === blockName);
+    },
+
+    isIncrementTargetingBoxWithStep(block, blockList, boxName, step) {
+        if (!block || block.trash) return false;
+        if (block.name === "incrementOne") {
+            return step === 1 && this.isBoxReference(block.connections?.[1], blockList, boxName);
+        }
+
+        if (block.name !== "increment") return false;
+
+        return (
+            this.isBoxReference(block.connections?.[1], blockList, boxName) &&
+            this.getNumericValue(block.connections?.[2], blockList) === step
+        );
     },
 
     rightAngleMatchesSides(rightBlock, blockList, sides) {

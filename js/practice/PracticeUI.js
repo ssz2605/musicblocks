@@ -56,15 +56,16 @@ export const PracticeUI = {
         if (!activity?.blocks) return;
 
         const projectFiles = {
-            1: "hcb_level1.tb",
+             1: "hcb_level1.tb",
             2: "sakura.tb",
             3: "rhythm_level3.tb",
             4: "chest_snap_clap.tb",
             5: "geometry_level5_starter.tb",
             6: "geometry_level6_starter.tb",
-            7: "blank_start.tb",
+            7: "geometry_level7_starter.tb",
             8: "polyrhythm_level8.tb",
-
+            9: "circular_rhythm_level9.tb",
+            10: "twinkle_level10_starter.tb",
         };
 
         const file = projectFiles[level];

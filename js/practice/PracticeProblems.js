@@ -145,7 +145,7 @@ export const PracticeProblems = [
     level: 4,
     title: "Chest, Snap, Clap – Build the Rhythm",
     description: `
-    <p><b>Chest, Snap, Clap</b> is a fun rhythm you can perform on your own body — no drums needed!</p>
+    <p><b>Chest, Snap, Clap</b> is a fun rhythm you can perform on your own body no drums needed!</p>
 
     <p>You will transcribe and recreate this rhythm using Music Blocks' <b>Phrase Maker</b>.</p>
 
@@ -265,6 +265,7 @@ export const PracticeProblems = [
         <li><b>forward</b></li>
         <li><b>right</b></li>
         <li><b>divide</b></li>
+        <li><b>add 1 to box1</b></li>
       </ul>
 
       <p><b>Your task:</b></p>
@@ -279,17 +280,21 @@ export const PracticeProblems = [
 
       <p><b>Hint:</b> first make one shape work with <b>box1</b>. After that, you can repeat the idea and change the value in <b>box1</b> to create many different shapes.</p>
 
-      <p><b>To complete this level, your code must do all of these things:</b></p>
+      <p><b>Extra hint for one automatic shape generator:</b></p>
+
+      <p>Use only <b>one Start block</b>. First store a starting value like <b>3</b> in <b>box1</b>. Then use an <b>outer repeat</b> with a normal number like <b>4</b> to decide how many shapes you want to draw. Inside that outer repeat, put your shape code with <b>repeat box1</b>, <b>forward 100</b>, and <b>right 360 / box1</b>. After the shape is finished, use <b>add 1 to box1</b> so the next shape has one more side.</p>
+
+      <p><b>To complete this level, make this automatic generator pattern:</b></p>
 
       <ol>
-        <li>Store a number in <b>box1</b>.</li>
-        <li>Use <b>box1</b> as the repeat count for drawing a shape.</li>
-        <li>Use <b>360 / box1</b> as the turning angle.</li>
-        <li>Use another repeat to make several shapes automatically.</li>
-        <li>Change <b>box1</b> after a shape is drawn so the next shape is different.</li>
+        <li>One <b>Start</b> block.</li>
+        <li>A block that stores a number in <b>box1</b>.</li>
+        <li>An <b>outer repeat</b> with a normal number such as 4.</li>
+        <li>Inside it, an <b>inner repeat box1</b> that draws the shape.</li>
+        <li>After that shape, an <b>add 1 to box1</b> block.</li>
       </ol>
 
-      <p><b>Level check:</b> the level will complete only when your project shows a shape generator that uses <b>box1</b> and automatically makes multiple different shapes.</p>
+      <p><b>Level check:</b> the level will complete only when your project shows one automatic shape generator that changes <b>box1</b> by itself and makes different shapes.</p>
     `,
         expected: {
             boxShapeAutomation: true
@@ -301,37 +306,75 @@ export const PracticeProblems = [
         level: 7,
         title: "Geometry and Rhythm III - Whole Note Circle",
         description: `
-      <p>Now connect geometry to rhythm directly. Think of a whole note like a whole pizza or a whole circle. Dividing the note is like dividing the circle into equal parts.</p>
+      <p>Now connect your shape-generator idea to rhythm. Think of a <b>whole note</b> like a whole pizza or a whole circle. If you divide the whole note into equal parts, you can also divide the circle into equal parts.</p>
 
-      <p>Instead of drawing straight-sided shapes, you will draw a circle over time.</p>
+      <p>In this level, you will build a program that draws a circle <b>over time</b>. The same number should control:</p>
+
+      <ul>
+        <li>how many rhythm parts the whole note is divided into</li>
+        <li>how many equal arc pieces the circle is divided into</li>
+      </ul>
+
+      <p><b>You will already see these blocks on the screen:</b></p>
+
+      <ul>
+        <li><b>Start</b></li>
+        <li><b>store in box1</b> and <b>box1</b></li>
+        <li><b>store in box2</b> and <b>box2</b></li>
+        <li><b>repeat</b></li>
+        <li><b>note value</b></li>
+        <li><b>drum</b></li>
+        <li><b>arc</b></li>
+        <li><b>divide</b></li>
+        <li><b>add 1 to box1</b></li>
+        <li><b>add 10 to box2</b></li>
+        <li><b>add 10 to color</b></li>
+      </ul>
+
+      <p><b>What should box1 and box2 do?</b></p>
+
+      <ul>
+        <li>Use <b>box1</b> to decide how many equal rhythm parts and arc parts you want.</li>
+        <li>Use <b>box2</b> for the radius so each new circle can become bigger.</li>
+      </ul>
 
       <p><b>Your task:</b></p>
 
       <ol>
-        <li>Use a <b>note value</b> block so the drawing happens over time.</li>
-        <li>Use <b>box1</b> as the denominator for the note value.</li>
-        <li>Inside the note, use a <b>drum</b> and an <b>arc</b> block.</li>
+        <li>Build one automatic circle generator with <b>one Start block</b>.</li>
+        <li>Use an <b>outer repeat</b> with a normal number so your program makes several circles.</li>
+        <li>Inside it, use <b>repeat box1</b> so each circle is divided into equal parts.</li>
+        <li>Put a <b>note value</b> block inside the inner repeat.</li>
+        <li>Make the note value use <b>1 / box1</b>.</li>
+        <li>Inside the <b>note</b>, place a <b>drum</b> and an <b>arc</b>.</li>
         <li>Make the arc angle use <b>360 / box1</b>.</li>
-        <li>Repeat the note so the circle is divided into equal musical parts.</li>
+        <li>Use <b>box2</b> as the radius.</li>
+        <li>After one full circle, use <b>add 1 to box1</b> so the next circle has more slices.</li>
+        <li>Use <b>add 10 to box2</b> so the next circle becomes clearly bigger.</li>
+        <li>Use <b>add 10 to color</b> so the circles look different. You can place this either inside the inner repeat or after the inner repeat.</li>
       </ol>
+
+      <p><b>Rough idea for how to connect the blocks:</b></p>
+
+      <p><b>Start</b> -> store a number in <b>box1</b> -> store a number in <b>box2</b> -> <b>outer repeat</b> -> <b>inner repeat box1</b> -> <b>note value 1 / box1</b> -> inside that <b>note</b> put <b>drum</b> and <b>arc</b> -> make the arc use <b>360 / box1</b> and radius <b>box2</b> -> after one full circle, <b>add 1 to box1</b>, <b>add 10 to box2</b>, and use <b>add 10 to color</b>.</p>
 
       <p><b>Think about:</b></p>
 
       <ul>
-        <li>How does changing <b>box1</b> change both the rhythm and the drawing?</li>
+        <li>How does changing <b>box1</b> change both the rhythm and the circle?</li>
         <li>Which note values feel faster? Which feel slower?</li>
-        <li>How does a whole circle relate to a whole note?</li>
+        <li>How does changing <b>box2</b> change the drawing?</li>
+        <li>What happens when the color changes after each repeat?</li>
       </ul>
 
-      <p><b>Level check:</b> your project should connect note value and circle division by using <b>box1</b> in both the note value and the arc angle.</p>
+      <p><b>Level check:</b> your project should show one automatic whole-note circle generator with an <b>outer repeat</b> for many circles and an <b>inner repeat box1</b> for dividing each circle. The <b>drum</b> and <b>arc</b> must be inside the <b>note</b>. It should use <b>box1</b> in both the note value and the arc angle, use <b>box2</b> for radius, then change <b>box1</b>, <b>box2</b>, and the color so the next circles have more slices, bigger radius, and different colors.</p>
     `,
         expected: {
             cyclicWholeNote: true
         },
         badgeGroup: "geometry_rhythm"
-    }
-,
-{
+    },
+    {
     level: 8,
     title: "Animated Polyrhythms",
     description: `
@@ -375,5 +418,109 @@ export const PracticeProblems = [
         rhythmRuler: true
     },
     badgeGroup: "polyrhythm"
-}
+},
+{
+    level: 9,
+    title: "Circular Rhythm Maker – Broadcast & Events",
+    description: `
+    <p><b>Broadcast</b> is a way for one part of a program to send a signal to another part. In music, think of it like a conductor calling out each beat and each drummer listening for their cue.</p>
+
+    <p>In this activity, you will build a <b>Circular Rhythm Maker</b> using mice, events, and broadcast just like the conductor circle from the lesson.</p>
+
+    <p><b>Your task:</b></p>
+
+    <ol>
+        <li>Create <b>12 drum mice</b> arranged in a circle using the <b>setxy</b> block.</li>
+        <li>Use <b>box</b> blocks to store which drum sound each mouse plays (0 for clap, 1 for ride bell).</li>
+        <li>Use the <b>plus (+) block</b> to create a unique event name for each drum mouse: <b>event0, event1, … event11</b>.</li>
+        <li>Set up a <b>conductor mouse</b> that walks around the circle using the <b>arc</b> block, broadcasting each event in turn.</li>
+        <li>Use <b>mod 12</b> to keep the conductor looping endlessly around the circle.</li>
+        <li>Make each drum mouse respond to a <b>click</b> clicking it should toggle its drum sound using the <b>1 minus box</b> trick.</li>
+        <li>Press <b>Play</b> and click on drum mice to change the rhythm live!</li>
+    </ol>
+
+    <p><b>Think about:</b></p>
+
+    <ul>
+        <li>What does broadcast mean in everyday life? In programming?</li>
+        <li>How is the conductor mouse similar to the human conductor from the intro activity?</li>
+        <li>How does <b>mod 12</b> keep the count from going past 11?</li>
+        <li>What happens when you click several mice before the conductor reaches them?</li>
+    </ul>
+
+    <p><b>Explore further:</b></p>
+    <ul>
+        <li>Change the number of drum mice (try 8 or 16).</li>
+        <li>Add more drum sounds beyond clap and ride bell.</li>
+        <li>Create dances or animations for the drum mice using <b>Avatar</b> blocks.</li>
+        <li>Use an <b>Input block</b> to let the player choose how many drums to place.</li>
+    </ul>
+
+    <p><b>Level check:</b> your project should have a conductor mouse broadcasting events to drum mice arranged in a circle, with clickable drums that toggle their sound using boxes and the <b>1 minus</b> trick.</p>
+    `,
+    expected: {
+        broadcastEvents: true,
+        conductorMouse: true,
+        drumMiceCircle: true,
+        modArithmetic: true,
+        clickToggle: true
+    },
+    badgeGroup: "events_broadcast"
+},
+
+    {
+        level: 10,
+        title: "Pitch Over Time - Twinkle Twinkle with Phrase Maker",
+        description: `
+      <p>In this level, you will use <b>Phrase Maker</b> to explore <b>pitch over time</b>. That means you will think about how the melody moves up, down, or stays the same as time goes forward.</p>
+
+      <p>Before you start, sing or hear the shape of <b>Twinkle Twinkle Little Star</b> in your mind.</p>
+
+      <p><b>Reference tune in solfege:</b></p>
+
+      <ul>
+        <li><b>A1:</b> Do Do Sol Sol La La Sol</li>
+        <li><b>A2:</b> Fa Fa Mi Mi Re Re Do</li>
+        <li><b>B:</b> Sol Sol Fa Fa Mi Mi Re</li>
+      </ul>
+
+      <p><b>Whole song form:</b></p>
+
+      <p><b>A1 A2 B B A1 A2</b></p>
+
+      <p><b>You will already see these blocks on the screen:</b></p>
+
+      <ul>
+        <li><b>Start</b></li>
+        <li><b>Phrase Maker</b></li>
+      </ul>
+
+      <p><b>Your task:</b></p>
+
+      <ol>
+        <li>Open <b>Phrase Maker</b>.</li>
+        <li>Create the three melody parts of Twinkle Twinkle using the tune reference above.</li>
+        <li>Export each part as an <b>action block</b>.</li>
+        <li>Find the exported action blocks in the <b>Actions</b> palette.</li>
+        <li>Arrange those action blocks under the <b>Start</b> block in the full song order: <b>A1 A2 B B A1 A2</b>.</li>
+        <li>Press <b>Play</b> and check whether it sounds like Twinkle Twinkle Little Star.</li>
+      </ol>
+
+      <p><b>Hints:</b></p>
+
+      <ul>
+        <li>All the pitches can use octave <b>4</b>.</li>
+        <li>You can rename your exported action blocks if that helps you remember the form.</li>
+        <li>Think of the song like a sandwich: the <b>A</b> part is the bread on the outside, and the <b>B</b> part is in the middle.</li>
+      </ul>
+
+      <p><b>Level check:</b> the level will complete when your project shows Phrase Maker-generated action blocks for the Twinkle Twinkle melody parts and those exported actions are arranged under <b>Start</b> in the correct song form.</p>
+    `,
+        expected: {
+            twinklePhraseMaker: true
+        },
+        badgeGroup: "melody_basics"
+    }
+,
+
 ];
