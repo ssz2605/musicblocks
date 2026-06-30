@@ -395,6 +395,13 @@ class Logo {
         }
     }
 
+    /**
+     * @returns {boolean} true if Tone.Transport is available in the runtime.
+     */
+    static get _hasTransport() {
+        return typeof Tone !== "undefined" && Tone.Transport;
+    }
+
     // ========= Setters, Getters =================================================================
 
     /**
@@ -996,14 +1003,13 @@ class Logo {
             tur.delayParameters = null;
         } else if (
             tur._transportEventId !== null &&
-            typeof Tone !== "undefined" &&
-            Tone.Transport &&
+            Logo._hasTransport &&
             typeof Tone.Transport.clear === "function"
         ) {
             Tone.Transport.clear(tur._transportEventId);
             tur._transportEventId = null;
             if (tur.delayParameters) {
-                if (typeof Tone !== "undefined" && Tone.Transport) {
+                if (Logo._hasTransport) {
                     tur._transportTime = Tone.Transport.seconds;
                 }
                 this.runFromBlockNow(
@@ -1158,7 +1164,7 @@ class Logo {
         }
 
         // Cancel all Transport-scheduled events before synth.stop()
-        if (typeof Tone !== "undefined" && Tone.Transport && Tone.Transport.cancel) {
+        if (Logo._hasTransport && Tone.Transport.cancel) {
             Tone.Transport.cancel();
         }
 
@@ -1171,7 +1177,7 @@ class Logo {
         this.synth.stop();
 
         // Reset Transport position for next run
-        if (typeof Tone !== "undefined" && Tone.Transport) {
+        if (Logo._hasTransport) {
             Tone.Transport.seconds = 0;
         }
 
@@ -1339,7 +1345,7 @@ class Logo {
 
         this.prepSynths();
 
-        if (typeof Tone !== "undefined" && Tone.Transport) {
+        if (Logo._hasTransport) {
             Tone.Transport.start();
             for (const turtle of this.activity.turtles.turtleList) {
                 turtle._transportTime = Tone.Transport.seconds;
@@ -1628,8 +1634,7 @@ class Logo {
             } else if (
                 logo.turtleDelay === 0 &&
                 delay > 0 &&
-                typeof Tone !== "undefined" &&
-                Tone.Transport &&
+                Logo._hasTransport &&
                 typeof Tone.Transport.schedule === "function" &&
                 tur._transportTime !== null
             ) {
@@ -1648,7 +1653,7 @@ class Logo {
                 tur.delayParameters = { blk: blk, flow: isflow, arg: receivedArg };
                 tur.delayTimeout = logo._timerManager.setGuardedTimeout(
                     () => {
-                        if (typeof Tone !== "undefined" && Tone.Transport) {
+                        if (Logo._hasTransport) {
                             const tur2 = logo.activity.turtles.ithTurtle(turtle);
                             tur2._transportTime = Tone.Transport.seconds;
                         }
