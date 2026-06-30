@@ -1009,9 +1009,7 @@ class Logo {
             Tone.Transport.clear(tur._transportEventId);
             tur._transportEventId = null;
             if (tur.delayParameters) {
-                if (Logo._hasTransport) {
-                    tur._transportTime = Tone.Transport.seconds;
-                }
+                tur._transportTime = Tone.Transport.seconds;
                 this.runFromBlockNow(
                     this,
                     turtle,
