@@ -1317,6 +1317,7 @@ class Logo {
         this.prepSynths();
 
         if (typeof Tone !== "undefined" && Tone.Transport) {
+            Tone.Transport.start();
             for (const turtle of this.activity.turtles.turtleList) {
                 turtle._transportTime = Tone.Transport.seconds;
             }
@@ -1606,6 +1607,7 @@ class Logo {
                 delay > 0 &&
                 typeof Tone !== "undefined" &&
                 Tone.Transport &&
+                typeof Tone.Transport.schedule === "function" &&
                 tur._transportTime !== null
             ) {
                 const transportTime = tur._transportTime + delay / 1000;
