@@ -1162,7 +1162,7 @@ class Logo {
         }
 
         // Cancel all Transport-scheduled events before synth.stop()
-        if (Logo._hasTransport && Tone.Transport.cancel) {
+        if (Logo._hasTransport && typeof Tone.Transport.cancel === "function") {
             Tone.Transport.cancel();
         }
 
@@ -1620,6 +1620,10 @@ class Logo {
 
         const tur = logo.activity.turtles.ithTurtle(turtle);
 
+        if (tur._transportTime === null && Logo._hasTransport) {
+            tur._transportTime = Tone.Transport.seconds;
+        }
+
         const delay = logo.turtleDelay + tur.waitTime;
         tur.doWait(0);
 
@@ -1641,7 +1645,10 @@ class Logo {
                 tur.delayParameters = { blk: blk, flow: isflow, arg: receivedArg };
                 tur._transportEventId = Tone.Transport.schedule(audioContextTime => {
                     const tur2 = logo.activity.turtles.ithTurtle(turtle);
-                    tur2._transportTime = Tone.Transport.getSecondsAtTime(audioContextTime);
+                    tur2._transportTime =
+                        typeof Tone.Transport.getSecondsAtTime === "function"
+                            ? Tone.Transport.getSecondsAtTime(audioContextTime)
+                            : Tone.Transport.seconds;
                     tur2._transportEventId = null;
                     tur2.delayParameters = null;
                     if (!logo.stopTurtle) {
