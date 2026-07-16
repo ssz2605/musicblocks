@@ -201,6 +201,7 @@ class Logo {
         this.sounds = [];
         this.cameraID = null;
         this.stopTurtle = false;
+        this.runGeneration = 0;
         this.lastKeyCode = null;
         this.setCameraID = this.setCameraID.bind(this);
 
@@ -1355,6 +1356,8 @@ class Logo {
             clearTimeout(this._lastNoteTimeout);
             this._lastNoteTimeout = null;
         }
+
+        this.runGeneration++;
 
         this._restoreConnections(); // Restore any broken connections.
         this.deps.storage.saveLocally(); // Save the state before running.

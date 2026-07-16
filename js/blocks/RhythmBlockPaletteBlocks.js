@@ -42,7 +42,15 @@ function setupRhythmBlockPaletteBlocks(activity) {
      * @param {number} timeout - The timeout in milliseconds.
      */
     const scheduleNote = (activity, beat, blk, turtle, callback, timeout) => {
-        setTimeout(() => Singer.processNote(activity, beat, false, blk, turtle, callback), timeout);
+        const timerMgr = activity.logo && activity.logo._timerManager;
+        const gen = activity.logo && activity.logo.runGeneration;
+        const schedule = timerMgr
+            ? cb => timerMgr.setTimeout(cb, timeout)
+            : cb => setTimeout(cb, timeout);
+        schedule(() => {
+            if (activity.logo.runGeneration !== gen) return;
+            Singer.processNote(activity, beat, false, blk, turtle, callback);
+        });
     };
 
     /**
@@ -196,7 +204,10 @@ function setupRhythmBlockPaletteBlocks(activity) {
                     if (i === arg0 - 1) {
                         __callback = () => {
                             delete tur.singer.noteDrums[blk];
-                            tur.singer.inNoteBlock.splice(tur.singer.inNoteBlock.indexOf(blk), 1);
+                            const idx = tur.singer.inNoteBlock.indexOf(blk);
+                            if (idx !== -1) {
+                                tur.singer.inNoteBlock.splice(idx, 1);
+                            }
                         };
                     } else {
                         __callback = null;
@@ -757,10 +768,10 @@ function setupRhythmBlockPaletteBlocks(activity) {
                         if (i === beatValues.length - 1) {
                             __callback = () => {
                                 delete tur.singer.noteDrums[blk];
-                                tur.singer.inNoteBlock.splice(
-                                    tur.singer.inNoteBlock.indexOf(blk),
-                                    1
-                                );
+                                const idx = tur.singer.inNoteBlock.indexOf(blk);
+                                if (idx !== -1) {
+                                    tur.singer.inNoteBlock.splice(idx, 1);
+                                }
                             };
                         } else {
                             __callback = null;
@@ -975,10 +986,15 @@ function setupRhythmBlockPaletteBlocks(activity) {
                 const beatValue = bpmFactor / noteBeatValue / arg0;
 
                 const __rhythmPlayNote = (thisBeat, blk, turtle, callback, timeout) => {
-                    setTimeout(
-                        () => Singer.processNote(activity, thisBeat, false, blk, turtle, callback),
-                        timeout
-                    );
+                    const timerMgr = activity.logo && activity.logo._timerManager;
+                    const gen = activity.logo && activity.logo.runGeneration;
+                    const schedule = timerMgr
+                        ? cb => timerMgr.setTimeout(cb, timeout)
+                        : cb => setTimeout(cb, timeout);
+                    schedule(() => {
+                        if (activity.logo.runGeneration !== gen) return;
+                        Singer.processNote(activity, thisBeat, false, blk, turtle, callback);
+                    });
                 };
 
                 let __callback = null;
@@ -986,7 +1002,10 @@ function setupRhythmBlockPaletteBlocks(activity) {
                     if (i === arg0 - 1) {
                         __callback = () => {
                             delete tur.singer.noteDrums[blk];
-                            tur.singer.inNoteBlock.splice(tur.singer.inNoteBlock.indexOf(blk), 1);
+                            const idx = tur.singer.inNoteBlock.indexOf(blk);
+                            if (idx !== -1) {
+                                tur.singer.inNoteBlock.splice(idx, 1);
+                            }
                         };
                     } else {
                         __callback = null;
