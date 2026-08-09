@@ -1,0 +1,74 @@
+name: PerfSense Benchmark
+
+on:
+  pull_request:
+    branches:
+      - demo/base-7923
+  workflow_dispatch:
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fetch base branch
+        run: |
+          git fetch origin demo/base-7923 --depth 1
+
+      - name: Checkout base into ./base
+        run: git worktree add base origin/demo/base-7923
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Clone and build PerfSense
+        run: |
+          git clone --depth 1 https://github.com/ssz2605/PerfSense-AI.git perfsense
+          corepack enable
+          cd perfsense
+          pnpm install --frozen-lockfile
+          pnpm build
+
+      - name: Install Playwright browser
+        run: |
+          cd perfsense
+          npx playwright install chromium
+
+      - name: Start base and head servers
+        run: |
+          node perfsense-server.cjs base 3000 &
+          node perfsense-server.cjs . 3001 &
+          sleep 3
+          curl -sf http://127.0.0.1:3000/ -o /dev/null && echo "base server up"
+          curl -sf http://127.0.0.1:3001/ -o /dev/null && echo "head server up"
+
+      - name: Benchmark base (before)
+        run: node perfsense/packages/cli/dist/index.js benchmark --pages "http://127.0.0.1:3000/?perfsenseProject=/examples/crabcanon.html" --runs 5 --metrics stageUpdateTime --out before.json
+
+      - name: Benchmark head (after)
+        run: node perfsense/packages/cli/dist/index.js benchmark --pages "http://127.0.0.1:3001/?perfsenseProject=/examples/crabcanon.html" --runs 5 --metrics stageUpdateTime --out after.json
+
+      - name: Save baseline and generate PR report
+        id: report
+        run: |
+          node perfsense/packages/cli/dist/index.js baseline save --from before.json --out baseline.json
+          node perfsense/packages/cli/dist/index.js report --baseline baseline.json --current after.json --config perfsense.config.json --repository . > pr-comment.md 2>&1 || true
+          cat pr-comment.md
+
+      - name: Post PR comment
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const body = fs.readFileSync('pr-comment.md', 'utf8');
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body,
+            });
