@@ -40,7 +40,7 @@ jobs:
       - name: Install Playwright browser
         run: |
           cd perfsense
-          npx playwright install chromium
+          pnpm --filter @perfsense/driver-playwright exec playwright install chromium
 
       - name: Start base and head servers
         run: |
