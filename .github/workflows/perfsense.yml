@@ -69,9 +69,19 @@ jobs:
           script: |
             const fs = require('fs');
             const body = fs.readFileSync('pr-comment.md', 'utf8');
+            const { data: pulls } = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              head: `${context.repo.owner}:demo/pr-7923`,
+            });
+            if (pulls.length === 0) {
+              core.warning('No open PR found for demo/pr-7923; skipping comment');
+              return;
+            }
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: context.issue.number,
+              issue_number: pulls[0].number,
               body,
             });
