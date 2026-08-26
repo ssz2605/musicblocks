@@ -14,6 +14,7 @@ export default [
             "**/build/**",
             "**/coverage/**",
             "**/*.min.js",
+            "**/*.cjs",
             "**/bower_components/**",
             "**/planet/libs/**",
             "**/sounds/**"
