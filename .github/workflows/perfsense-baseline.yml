@@ -1,0 +1,176 @@
+name: PerfSense Baseline Refresh
+
+# Regenerates baseline.json from master on a weekly schedule.
+# Opens a "chore: refresh perf baseline" PR for human review.
+# Also supports manual trigger (workflow_dispatch) for initial capture.
+#
+# This workflow NEVER modifies master directly. It pushes to a
+# dedicated branch and opens a reviewable PR.
+#
+# CLI interface (from PerfSense-AI):
+#   benchmark --pages URL --runs N --metrics m1,m2 --out results.json
+#   baseline save --from results.json --out baseline.json
+
+on:
+    schedule:
+        - cron: "0 6 * * 1" # Every Monday 06:00 UTC
+    workflow_dispatch:
+        inputs:
+            reason:
+                description: "Why are you re-baselining? (shown in PR body)"
+                required: false
+                default: "Scheduled baseline refresh"
+
+concurrency:
+    group: perfsense-baseline
+    cancel-in-progress: false
+
+permissions:
+    contents: write
+    pull-requests: write
+
+jobs:
+    rebaseline:
+        name: Regenerate Baseline
+        runs-on: ubuntu-latest
+        timeout-minutes: 30
+        steps:
+            - name: Checkout master
+              uses: actions/checkout@v4
+              with:
+                  ref: master
+                  fetch-depth: 0
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v5
+              with:
+                  node-version: "20"
+
+            - name: Setup pnpm
+              uses: pnpm/action-setup@v4
+              with:
+                  version: 10
+
+            - name: Clone PerfSense
+              run: git clone --depth 1 https://github.com/ssz2605/PerfSense-AI.git /tmp/perfsense
+
+            - name: Build PerfSense
+              working-directory: /tmp/perfsense
+              run: pnpm install --frozen-lockfile && pnpm build
+
+            - name: Install Playwright Chromium
+              working-directory: /tmp/perfsense
+              run: pnpm --filter @perfsense/driver-playwright exec playwright install chromium
+
+            - name: Start Music Blocks server
+              run: |
+                  node perfsense-server.cjs . 3000 &
+                  for i in 1 2 3 4 5; do
+                    curl -sf http://127.0.0.1:3000/ -o /dev/null && break
+                    sleep 2
+                  done
+                  curl -sf http://127.0.0.1:3000/ -o /dev/null && echo "Server ready" || { echo "Server failed"; exit 1; }
+
+            - name: Run benchmark suite
+              run: |
+                  /tmp/perfsense/packages/cli/dist/index.js benchmark \
+                    --pages "http://127.0.0.1:3000/index.html?mbPerf=1" \
+                    --runs 5 \
+                    --metrics stageUpdateTime \
+                    --out benchmark-results.json
+
+            - name: Save baseline
+              run: |
+                  /tmp/perfsense/packages/cli/dist/index.js baseline save \
+                    --from benchmark-results.json \
+                    --out baseline-new.json
+
+            - name: Stamp runner metadata into baseline
+              run: |
+                  COMMIT_SHA=$(git rev-parse HEAD)
+                  CHROME_VERSION=$(google-chrome --version 2>/dev/null || echo "unknown")
+
+                  node -e "
+                    const fs = require('fs');
+                    const bl = JSON.parse(fs.readFileSync('baseline-new.json','utf8'));
+                    bl.commitSha = '$COMMIT_SHA';
+                    bl.runner = bl.runner || {};
+                    bl.runner.os = 'ubuntu-latest';
+                    bl.runner.chromeVersion = '$CHROME_VERSION';
+                    bl.runner.nodeVersion = '20';
+                    fs.writeFileSync('baseline-new.json', JSON.stringify(bl, null, 2) + '\\n');
+                  "
+
+            - name: Push to refresh branch
+              run: |
+                  BRANCH="perf-baseline-refresh"
+                  git config user.name "github-actions[bot]"
+                  git config user.email "github-actions[bot]@users.noreply.github.com"
+
+                  # Delete remote branch if it exists (idempotent re-run)
+                  git push origin --delete "$BRANCH" 2>/dev/null || true
+
+                  git checkout -b "$BRANCH"
+                  cp baseline-new.json baseline.json
+                  git add baseline.json
+                  git commit -m "chore(perf): refresh PerfSense baseline" \
+                    -m "Captured from master@$(git rev-parse --short HEAD)" \
+                    -m "Reason: ${{ github.event.inputs.reason || 'Weekly scheduled refresh' }}"
+
+                  git push origin "$BRANCH"
+
+            - name: Open or update baseline PR
+              uses: actions/github-script@v7
+              with:
+                  script: |
+                      const fs = require('fs');
+                      const branch = 'perf-baseline-refresh';
+                      const title = 'chore: refresh perf baseline';
+                      const headSha = '${{ github.sha }}'.substring(0, 7);
+                      const reason = `${{ github.event.inputs.reason || 'Weekly scheduled refresh' }}`;
+
+                      // Check for existing open PR from this branch
+                      const { data: existing } = await github.rest.pulls.list({
+                        owner: context.repo.owner,
+                        repo: context.repo.repo,
+                        state: 'open',
+                        head: `${context.repo.owner}:${branch}`,
+                      });
+
+                      const body = [
+                        '## PerfSense Baseline Refresh',
+                        '',
+                        `**Source:** \`master@${headSha}\``,
+                        `**Reason:** ${reason}`,
+                        `**Triggered by:** ${{ github.event_name }}`,
+                        '',
+                        'This PR updates `baseline.json` with fresh performance data from master.',
+                        'Review the diff to verify metric changes match recently merged work.',
+                        '',
+                        'Once merged, all subsequent PR comparisons will use this baseline.',
+                        '',
+                        '---',
+                        '*Auto-generated by PerfSense baseline workflow. Safe to merge after review.*',
+                      ].join('\n');
+
+                      if (existing.length > 0) {
+                        // Update existing PR
+                        await github.rest.pulls.update({
+                          owner: context.repo.owner,
+                          repo: context.repo.repo,
+                          pull_number: existing[0].number,
+                          body,
+                        });
+                        core.info(`Updated existing PR #${existing[0].number}`);
+                      } else {
+                        // Create new PR
+                        const { data: pr } = await github.rest.pulls.create({
+                          owner: context.repo.owner,
+                          repo: context.repo.repo,
+                          title,
+                          head: branch,
+                          base: 'master',
+                          body,
+                        });
+                        core.info(`Created PR #${pr.number}`);
+                      }

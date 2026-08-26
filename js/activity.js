@@ -2612,6 +2612,11 @@ class Activity {
             setupGridRenderer(this);
             this.boundary = new Boundary(this.blocksContainer);
             this.blocks = new Blocks(this);
+
+            // PerfSense: expose stage for external benchmark metrics
+            window.__mb = window.__mb || {};
+            window.__mb.stage = this.stage;
+
             this.palettes = new Palettes(this);
             this.palettes.init();
             this.logo = new Logo(this);
