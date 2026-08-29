@@ -128,7 +128,7 @@ jobs:
                   set -o pipefail
                   node /tmp/perfsense/packages/cli/dist/index.js benchmark \
                     --pages "http://127.0.0.1:8787/index.html?mbPerf=1" \
-                    --runs 5 \
+                    --runs 11 \
                     --metrics stageUpdateTime \
                     --out pr-results.json 2>&1 | tee benchmark.log
                   BENCH_EXIT=$?
@@ -142,8 +142,8 @@ jobs:
                     echo "::error::Benchmark produced no valid stageUpdateTime samples; no comparison will be posted."
                     echo "has_results=false" >> "$GITHUB_OUTPUT"
                   else
-                    if [ "$SAMPLE_COUNT" -lt 5 ]; then
-                      echo "::warning::Benchmark produced only $SAMPLE_COUNT/5 valid samples"
+                    if [ "$SAMPLE_COUNT" -lt 11 ]; then
+                      echo "::warning::Benchmark produced only $SAMPLE_COUNT/11 valid samples"
                     fi
                     echo "has_results=true" >> "$GITHUB_OUTPUT"
                   fi
@@ -178,7 +178,7 @@ jobs:
                     echo "## PerfSense Performance Report"
                     echo ""
                     echo "**PR:** #${{ github.event.pull_request.number }} · **Head:** \`$HEAD_SHA\` · **Time:** $TIMESTAMP"
-                    echo "**Baseline:** \`origin/master\` · **Metric:** stageUpdateTime · **Runs:** 5"
+                    echo "**Baseline:** \`origin/master\` · **Metric:** stageUpdateTime · **Runs:** 11"
                     echo ""
 
                     if [ "${{ steps.benchmark.outputs.has_results }}" != "true" ]; then
@@ -190,15 +190,15 @@ jobs:
                     else
                       cat report-output.md
                       echo ""
-                      if [ "${{ steps.benchmark.outputs.sample_count }}" != "5" ]; then
-                        echo "> Warning: Only ${{ steps.benchmark.outputs.sample_count }}/5 benchmark samples were valid."
+                      if [ "${{ steps.benchmark.outputs.sample_count }}" != "11" ]; then
+                        echo "> Warning: Only ${{ steps.benchmark.outputs.sample_count }}/11 benchmark samples were valid."
                         echo ""
                       fi
                     fi
 
                     echo "---"
                     echo "*Comment-only · non-blocking · never fails checks or blocks merges*"
-                    echo "*Classification: median % delta vs thresholds (warning 10% / fail 25%). Mann-Whitney U + Cliff's delta are only computed when both samples have at least 6 valid runs (current: 5).*"
+                    echo "*Classification: median % delta vs thresholds (warning 10% / fail 25%). Mann-Whitney U + Cliff's delta are only computed when both samples have at least 6 valid runs (current: 11).*"
                   } > comment-body.md
 
             - name: Post or update PR comment
