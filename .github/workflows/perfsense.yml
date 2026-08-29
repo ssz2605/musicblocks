@@ -2,6 +2,8 @@ name: PerfSense Benchmark
 
 # Runs on PRs that touch runtime code. Posts a single performance comparison
 # comment. Comment-only — never fails checks or blocks merges.
+# Runtime-file filtering happens in the "Check runtime files changed" step:
+# event-level `paths` filters do not dispatch reliably on fork PRs.
 #
 # Baseline lives in baseline.json (committed on master).
 # If baseline is missing or empty, the run is skipped with no comment.
@@ -15,22 +17,6 @@ name: PerfSense Benchmark
 
 on:
     pull_request:
-        paths:
-            - "js/**"
-            - "css/**"
-            - "dist/**"
-            - "index.html"
-        paths-ignore:
-            - "js/**/__tests__/**"
-            - "js/**/*.test.js"
-            - "locales/**"
-            - "sounds/**"
-            - "images/**"
-            - "fonts/**"
-            - "documentation/**"
-            - "Docs/**"
-            - "planet/**"
-            - "*.md"
 
 # One run per PR; newer pushes cancel older runs.
 concurrency:
@@ -51,29 +37,49 @@ jobs:
               uses: actions/checkout@v4
               with:
                   ref: ${{ github.event.pull_request.head.sha }}
+                  fetch-depth: 0
+
+            - name: Check runtime files changed
+              id: changed
+              run: |
+                  if git diff --exit-code --quiet \
+                    "${{ github.event.pull_request.base.sha }}" \
+                    "${{ github.event.pull_request.head.sha }}" \
+                    -- js css dist index.html; then
+                    echo "No runtime files changed; skipping PerfSense benchmark."
+                    echo "changed=false" >> "$GITHUB_OUTPUT"
+                  else
+                    echo "changed=true" >> "$GITHUB_OUTPUT"
+                  fi
 
             - name: Setup Node.js
+              if: steps.changed.outputs.changed == 'true'
               uses: actions/setup-node@v5
               with:
                   node-version: "20"
 
             - name: Setup pnpm
+              if: steps.changed.outputs.changed == 'true'
               uses: pnpm/action-setup@v4
               with:
                   version: 10
 
             - name: Clone PerfSense
+              if: steps.changed.outputs.changed == 'true'
               run: git clone --depth 1 https://github.com/ssz2605/PerfSense-AI.git /tmp/perfsense
 
             - name: Build PerfSense
+              if: steps.changed.outputs.changed == 'true'
               working-directory: /tmp/perfsense
               run: pnpm install --frozen-lockfile && pnpm build
 
             - name: Install Playwright Chromium
+              if: steps.changed.outputs.changed == 'true'
               working-directory: /tmp/perfsense
               run: pnpm --filter @perfsense/driver-playwright exec playwright install chromium
 
             - name: Start Music Blocks server
+              if: steps.changed.outputs.changed == 'true'
               run: |
                   node perfsense-server.cjs . 8787 &
                   for i in 1 2 3 4 5; do
@@ -83,6 +89,7 @@ jobs:
                   curl -sf http://127.0.0.1:8787/index.html -o /dev/null && echo "Server ready" || { echo "Server failed"; exit 1; }
 
             - name: Check baseline exists
+              if: steps.changed.outputs.changed == 'true'
               id: baseline
               run: |
                   if [ ! -s baseline.json ]; then
@@ -93,7 +100,7 @@ jobs:
                   fi
 
             - name: Run benchmark
-              if: steps.baseline.outputs.exists == 'true'
+              if: steps.changed.outputs.changed == 'true' && steps.baseline.outputs.exists == 'true'
               id: benchmark
               run: |
                   set +e
@@ -113,7 +120,7 @@ jobs:
                   fi
 
             - name: Generate comparison report
-              if: always() && steps.baseline.outputs.exists == 'true' && steps.benchmark.outputs.has_results == 'true'
+              if: always() && steps.changed.outputs.changed == 'true' && steps.baseline.outputs.exists == 'true' && steps.benchmark.outputs.has_results == 'true'
               id: report
               run: |
                   set +e
@@ -133,7 +140,7 @@ jobs:
                   fi
 
             - name: Generate PR comment
-              if: always() && steps.baseline.outputs.exists == 'true'
+              if: always() && steps.changed.outputs.changed == 'true' && steps.baseline.outputs.exists == 'true'
               run: |
                   TIMESTAMP=$(date -u '+%Y-%m-%d %H:%M UTC')
                   HEAD_SHA=$(git rev-parse --short HEAD)
@@ -164,7 +171,7 @@ jobs:
                   } > comment-body.md
 
             - name: Post or update PR comment
-              if: always() && steps.baseline.outputs.exists == 'true'
+              if: always() && steps.changed.outputs.changed == 'true' && steps.baseline.outputs.exists == 'true'
               uses: thollander/actions-comment-pull-request@v3
               with:
                   filePath: comment-body.md
