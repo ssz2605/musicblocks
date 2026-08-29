@@ -1,6 +1,6 @@
 {
     "pages": ["http://127.0.0.1:8787/index.html?mbPerf=1"],
-    "runs": 5,
+    "runs": 11,
     "metrics": ["stageUpdateTime"],
     "thresholds": {
         "stageUpdateTime": { "warning": 10, "fail": 25 }
