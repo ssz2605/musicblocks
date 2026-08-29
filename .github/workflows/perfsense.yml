@@ -146,7 +146,6 @@ jobs:
                   HEAD_SHA=$(git rev-parse --short HEAD)
 
                   {
-                    echo "body<<PERFSENSE_EOF"
                     echo "## PerfSense Performance Report"
                     echo ""
                     echo "**PR:** #${{ github.event.pull_request.number }} · **Head:** \`$HEAD_SHA\` · **Time:** $TIMESTAMP"
@@ -167,7 +166,6 @@ jobs:
                     echo "---"
                     echo "*Comment-only · non-blocking · never fails checks or blocks merges*"
                     echo "*Statistics: Mann-Whitney U (p<0.05) + Cliff's delta (>=0.147) · audio/memory metrics are warn-only*"
-                    echo "PERFSENSE_EOF"
                   } > comment-body.md
 
             - name: Post or update PR comment
