@@ -2615,7 +2615,7 @@ class Activity {
 
             // PerfSense: expose stage for external benchmark metrics
             window.__mb = window.__mb || {};
-            window.__mb.stage = this.stage;
+            // window.__mb.stage = this.stage; // perfsense-final-validation: temporarily disabled
 
             this.palettes = new Palettes(this);
             this.palettes.init();
