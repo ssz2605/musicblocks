@@ -2521,6 +2521,14 @@ class Activity {
             this.setupWindowBlurHandler(doHardStopButton);
 
             this.stage = new createjs.Stage(this.canvas);
+            const perfSenseOriginalStageUpdate = this.stage.update.bind(this.stage);
+            this.stage.update = function () {
+                const perfSenseDelayEnd = performance.now() + 2;
+                while (performance.now() < perfSenseDelayEnd) {
+                    // Temporary PerfSense regression validation delay.
+                }
+                perfSenseOriginalStageUpdate();
+            };
             createjs.Touch.enable(this.stage, false, true);
             this._startRenderLoop();
 
