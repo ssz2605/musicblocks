@@ -75,12 +75,12 @@ jobs:
 
             - name: Start Music Blocks server
               run: |
-                  node perfsense-server.cjs . 3000 &
+                  node perfsense-server.cjs . 8787 &
                   for i in 1 2 3 4 5; do
-                    curl -sf http://127.0.0.1:3000/ -o /dev/null && break
+                    curl -sf http://127.0.0.1:8787/ -o /dev/null && break
                     sleep 2
                   done
-                  curl -sf http://127.0.0.1:3000/ -o /dev/null && echo "Server ready" || { echo "Server failed"; exit 1; }
+                  curl -sf http://127.0.0.1:8787/ -o /dev/null && echo "Server ready" || { echo "Server failed"; exit 1; }
 
             - name: Check baseline exists
               id: baseline
@@ -98,7 +98,7 @@ jobs:
               run: |
                   set +e
                   /tmp/perfsense/packages/cli/dist/index.js benchmark \
-                    --pages "http://127.0.0.1:3000/index.html?mbPerf=1" \
+                    --pages "http://127.0.0.1:8787/index.html?mbPerf=1" \
                     --runs 5 \
                     --metrics stageUpdateTime \
                     --out pr-results.json 2>&1 | tee benchmark.log
