@@ -1,13 +1,25 @@
 name: PerfSense Benchmark
 
+env:
+    # Immutable pin: this workflow always builds and runs this exact
+    # revision of PerfSense-AI. Verify the SHA is still current before
+    # changing it (tags do not exist on the repo yet).
+    PERFSENSE_REF: 25a48f1dbde8b6c732a30340ff422ffc8566c1ad
+
 # Runs on PRs that touch runtime code. Posts a single performance comparison
 # comment. Comment-only — never fails checks or blocks merges.
 # Runtime-file filtering happens in the "Check runtime files changed" step:
 # event-level `paths` filters do not dispatch reliably on fork PRs.
 #
-# Baseline lives in baseline.json (committed on master).
-# If baseline is missing or empty, the run is skipped with no comment.
-# Initial baseline is captured by .github/workflows/perfsense-baseline.yml.
+# Baseline: PRs always compare against baseline.json fetched from
+# origin/master at run time, so a PR can never change the baseline it is
+# compared against, and stale branches never use an outdated baseline. The
+# baseline file itself is refreshed via the reviewable PR opened by
+# perfsense-baseline.yml. If origin/master has no baseline, the run is
+# skipped with no comment.
+#
+# Integrity: the benchmark step validates that pr-results.json contains the
+# expected numeric samples. An empty/failed run never posts a comparison.
 #
 # CLI interface (from PerfSense-AI):
 #   benchmark --pages URL --runs N --metrics m1,m2 --out results.json
@@ -52,6 +64,12 @@ jobs:
                     echo "changed=true" >> "$GITHUB_OUTPUT"
                   fi
 
+            - name: Use authoritative baseline from origin/master
+              if: steps.changed.outputs.changed == 'true'
+              run: |
+                  git fetch --quiet origin master
+                  git show origin/master:baseline.json > baseline.json || true
+
             - name: Setup Node.js
               if: steps.changed.outputs.changed == 'true'
               uses: actions/setup-node@v5
@@ -66,7 +84,10 @@ jobs:
 
             - name: Clone PerfSense
               if: steps.changed.outputs.changed == 'true'
-              run: git clone --depth 1 https://github.com/ssz2605/PerfSense-AI.git /tmp/perfsense
+              run: |
+                  git clone https://github.com/ssz2605/PerfSense-AI.git /tmp/perfsense
+                  git -C /tmp/perfsense checkout --quiet "$PERFSENSE_REF"
+                  git -C /tmp/perfsense log -1 --format="PerfSense pinned to %H (%s)"
 
             - name: Build PerfSense
               if: steps.changed.outputs.changed == 'true'
@@ -94,7 +115,7 @@ jobs:
               run: |
                   if [ ! -s baseline.json ]; then
                     echo "exists=false" >> "$GITHUB_OUTPUT"
-                    echo "::warning::baseline.json is empty or missing. Run the baseline workflow to capture initial data."
+                    echo "::warning::origin/master has no baseline.json. Run the baseline workflow to capture initial data."
                   else
                     echo "exists=true" >> "$GITHUB_OUTPUT"
                   fi
@@ -104,6 +125,7 @@ jobs:
               id: benchmark
               run: |
                   set +e
+                  set -o pipefail
                   node /tmp/perfsense/packages/cli/dist/index.js benchmark \
                     --pages "http://127.0.0.1:8787/index.html?mbPerf=1" \
                     --runs 5 \
@@ -112,10 +134,17 @@ jobs:
                   BENCH_EXIT=$?
                   echo "benchmark_exit=$BENCH_EXIT" >> "$GITHUB_ENV"
 
-                  if [ "$BENCH_EXIT" -ne 0 ] || [ ! -s pr-results.json ]; then
-                    echo "Benchmark did not produce results"
+                  SAMPLE_COUNT=$(node -e "const r=require('./pr-results.json');const runs=(r[0]&&r[0].runs)||[];const n=runs.filter(x=>x.metrics&&typeof x.metrics.stageUpdateTime==='number'&&Number.isFinite(x.metrics.stageUpdateTime)).length;console.log(n)" 2>/dev/null)
+                  SAMPLE_COUNT="${SAMPLE_COUNT:-0}"
+                  echo "sample_count=$SAMPLE_COUNT" >> "$GITHUB_OUTPUT"
+
+                  if [ "$BENCH_EXIT" -ne 0 ] || [ "$SAMPLE_COUNT" -lt 1 ]; then
+                    echo "::error::Benchmark produced no valid stageUpdateTime samples; no comparison will be posted."
                     echo "has_results=false" >> "$GITHUB_OUTPUT"
                   else
+                    if [ "$SAMPLE_COUNT" -lt 5 ]; then
+                      echo "::warning::Benchmark produced only $SAMPLE_COUNT/5 valid samples"
+                    fi
                     echo "has_results=true" >> "$GITHUB_OUTPUT"
                   fi
 
@@ -149,11 +178,11 @@ jobs:
                     echo "## PerfSense Performance Report"
                     echo ""
                     echo "**PR:** #${{ github.event.pull_request.number }} · **Head:** \`$HEAD_SHA\` · **Time:** $TIMESTAMP"
-                    echo "**Baseline:** \`master\` · **Metric:** stageUpdateTime · **Runs:** 5"
+                    echo "**Baseline:** \`origin/master\` · **Metric:** stageUpdateTime · **Runs:** 5"
                     echo ""
 
                     if [ "${{ steps.benchmark.outputs.has_results }}" != "true" ]; then
-                      echo "> Warning: Benchmarks did not produce results. Check workflow logs."
+                      echo "> Warning: Benchmarks did not produce valid stageUpdateTime samples. No comparison was made. Check workflow logs."
                       echo ""
                     elif [ "${{ steps.report.outputs.has_report }}" != "true" ]; then
                       echo "> Warning: Report could not be generated. Results available but not compared."
@@ -161,11 +190,15 @@ jobs:
                     else
                       cat report-output.md
                       echo ""
+                      if [ "${{ steps.benchmark.outputs.sample_count }}" != "5" ]; then
+                        echo "> Warning: Only ${{ steps.benchmark.outputs.sample_count }}/5 benchmark samples were valid."
+                        echo ""
+                      fi
                     fi
 
                     echo "---"
                     echo "*Comment-only · non-blocking · never fails checks or blocks merges*"
-                    echo "*Statistics: Mann-Whitney U (p<0.05) + Cliff's delta (>=0.147) · audio/memory metrics are warn-only*"
+                    echo "*Classification: median % delta vs thresholds (warning 10% / fail 25%). Mann-Whitney U + Cliff's delta are only computed when both samples have at least 6 valid runs (current: 5).*"
                   } > comment-body.md
 
             - name: Post or update PR comment
