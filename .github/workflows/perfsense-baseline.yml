@@ -1,5 +1,9 @@
 name: PerfSense Baseline Refresh
 
+env:
+    # Immutable pin: same revision of PerfSense-AI used by perfsense.yml.
+    PERFSENSE_REF: 25a48f1dbde8b6c732a30340ff422ffc8566c1ad
+
 # Regenerates baseline.json from master on a weekly schedule.
 # Opens a "chore: refresh perf baseline" PR for human review.
 # Also supports manual trigger (workflow_dispatch) for initial capture.
@@ -52,7 +56,10 @@ jobs:
                   version: 10
 
             - name: Clone PerfSense
-              run: git clone --depth 1 https://github.com/ssz2605/PerfSense-AI.git /tmp/perfsense
+              run: |
+                  git clone https://github.com/ssz2605/PerfSense-AI.git /tmp/perfsense
+                  git -C /tmp/perfsense checkout --quiet "$PERFSENSE_REF"
+                  git -C /tmp/perfsense log -1 --format="PerfSense pinned to %H (%s)"
 
             - name: Build PerfSense
               working-directory: /tmp/perfsense
