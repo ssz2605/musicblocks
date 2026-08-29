@@ -97,7 +97,7 @@ jobs:
               id: benchmark
               run: |
                   set +e
-                  /tmp/perfsense/packages/cli/dist/index.js benchmark \
+                  node /tmp/perfsense/packages/cli/dist/index.js benchmark \
                     --pages "http://127.0.0.1:8787/index.html?mbPerf=1" \
                     --runs 5 \
                     --metrics stageUpdateTime \
@@ -117,7 +117,7 @@ jobs:
               id: report
               run: |
                   set +e
-                  /tmp/perfsense/packages/cli/dist/index.js report \
+                  node /tmp/perfsense/packages/cli/dist/index.js report \
                     --baseline baseline.json \
                     --current pr-results.json \
                     --config perfsense.config.json \
