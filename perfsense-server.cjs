@@ -72,6 +72,14 @@ const server = http.createServer((req, res) => {
     });
 });
 
+server.on("error", err => {
+    console.error(`[perfsense-server] Server error: ${err.message}`);
+    if (err.code === "EADDRINUSE") {
+        console.error(`[perfsense-server] Port ${port} is already in use`);
+    }
+    process.exit(1);
+});
+
 server.listen(port, "0.0.0.0", () => {
     console.log(`[perfsense-server] Serving ${root} on http://0.0.0.0:${port}`);
 });
