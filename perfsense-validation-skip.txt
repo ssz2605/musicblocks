@@ -1,0 +1,5 @@
+PerfSense final validation - non-runtime file.
+
+This file is intentionally NOT under the runtime gate paths (js/css/dist/index.html),
+so pushes touching only this file should SKIP the benchmark entirely.
+Temporary validation artifact; deleted after validation.
