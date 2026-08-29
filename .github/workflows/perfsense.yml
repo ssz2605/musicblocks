@@ -77,10 +77,10 @@ jobs:
               run: |
                   node perfsense-server.cjs . 8787 &
                   for i in 1 2 3 4 5; do
-                    curl -sf http://127.0.0.1:8787/ -o /dev/null && break
+                    curl -sf http://127.0.0.1:8787/index.html -o /dev/null && break
                     sleep 2
                   done
-                  curl -sf http://127.0.0.1:8787/ -o /dev/null && echo "Server ready" || { echo "Server failed"; exit 1; }
+                  curl -sf http://127.0.0.1:8787/index.html -o /dev/null && echo "Server ready" || { echo "Server failed"; exit 1; }
 
             - name: Check baseline exists
               id: baseline
