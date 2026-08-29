@@ -14,7 +14,6 @@
 // (https://github.com/walterbender/turtleart), but implemented from
 // scratch. -- Walter Bender, October 2014.
 
-// perfsense-final-validation: runtime change marker (temporary, never merged)
 try {
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.has("layoutProfiling")) {
