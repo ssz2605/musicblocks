@@ -174,4 +174,4 @@ jobs:
               with:
                   file-path: comment-body.md
                   comment-tag: perfsense-report
-                  mode: replace
+                  mode: upsert
