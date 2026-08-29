@@ -1,7 +1,28 @@
 {
-    "schema": "perfsense-baseline-v1",
-    "createdAt": null,
-    "runs": 0,
-    "pages": {},
-    "source": null
+  "schema": "perfsense-baseline-v1",
+  "createdAt": "2026-08-29T04:26:24.686Z",
+  "runs": 5,
+  "pages": {
+    "index.html": {
+      "stageUpdateTime": {
+        "median": 0.5120000000006985,
+        "p10": 0.4888615384636841,
+        "p90": 0.5283333333336486,
+        "values": [
+          0.5333333333334546,
+          0.5208333333339397,
+          0.5120000000006985,
+          0.4840000000037253,
+          0.4961538461536223
+        ]
+      }
+    }
+  },
+  "source": "benchmark-results.json",
+  "commitSha": "119ef9526aea41f16e3e741d1200034fc2e74df2",
+  "runner": {
+    "os": "ubuntu-latest",
+    "chromeVersion": "Google Chrome 151.0.7922.173 ",
+    "nodeVersion": "20"
+  }
 }
