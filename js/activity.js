@@ -2613,10 +2613,6 @@ class Activity {
             this.boundary = new Boundary(this.blocksContainer);
             this.blocks = new Blocks(this);
 
-            // PerfSense: expose stage for external benchmark metrics
-            window.__mb = window.__mb || {};
-            window.__mb.stage = this.stage;
-
             this.palettes = new Palettes(this);
             this.palettes.init();
             this.logo = new Logo(this);
@@ -2855,6 +2851,45 @@ class Activity {
                 typeof window.__mbPerf.report === "function"
             ) {
                 window.__mbPerf.report();
+            }
+
+            /*
+             * PerfSense benchmark bridge (fork-only). Exposes the live app
+             * internals consumed by the PerfSense-AI seam metrics and
+             * scenarios, but ONLY when ?mbPerf=1 is present so normal runs and
+             * upstream merges are unaffected.
+             */
+            if (
+                typeof window !== "undefined" &&
+                new URLSearchParams(window.location.search).get("mbPerf") === "1"
+            ) {
+                const mbBridge = window.__mb || (window.__mb = {});
+                mbBridge.stage = this.stage;
+                mbBridge.logo = this.logo;
+                mbBridge.turtles = this.turtles;
+                mbBridge.blocks = this.blocks;
+                mbBridge.blocks.projectLoaded = () =>
+                    Object.keys(this.blocks.blockList || {}).length > 0;
+                mbBridge.runner = {
+                    isRunning: () => this.turtles.running(),
+                    start: () => {
+                        if (!this.logo._alreadyRunning) {
+                            doFastButton(this);
+                        }
+                    }
+                };
+                mbBridge.ui = {
+                    save: async () => this.save.saveHTML(),
+                    exportMIDI: async () => this.save.saveMIDI()
+                };
+                mbBridge.perfMarks = {
+                    openStart: null
+                };
+                if (this.fileChooser) {
+                    this.fileChooser.addEventListener("change", () => {
+                        mbBridge.perfMarks.openStart = performance.now();
+                    });
+                }
             }
         };
     }
