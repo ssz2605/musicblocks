@@ -4775,6 +4775,11 @@ class Blocks {
          * return {void}
          */
         this.loadNewBlocks = blockObjs => {
+            /** PERF-VALIDATE: simulated main-thread stall in project import. */
+            const __busyEnd = performance.now() + 4000;
+            while (performance.now() < __busyEnd) {
+                continue;
+            }
             /** Suppress intermediate canvas redraws during block loading. */
             this.activity._suppressRefresh = true;
 
