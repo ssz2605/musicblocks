@@ -4,9 +4,9 @@ env:
     # Immutable pin: this workflow always builds and runs this exact
     # revision of PerfSense-AI. Verify the SHA is still current before
     # changing it (tags do not exist on the repo yet).
-    # 8a003d00 = PR #3: per-page scenario phases, render-ready openProject,
-    # shared plugin registry, pinned regression flag rule.
-    PERFSENSE_REF: 8a003d008b597210da969140eb1ec33c6294c00d
+    # 8db9d11 = PR #4: real seam counting (runFromBlockNow), transport
+    # pending/cancel handling, configurable port/runTimeoutMs.
+    PERFSENSE_REF: 8db9d11bfbeeb088f6201393ef76fdd18c368aa1
 
 # Runs on PRs that touch runtime code. Posts a single performance comparison
 # comment. Comment-only — never fails checks or blocks merges.

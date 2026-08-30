@@ -8,6 +8,7 @@
         "http://127.0.0.1:8787/index.html?mbPerf=1&perfsenseProject=crabcanon-plot.html"
     ],
     "runs": 5,
+    "runTimeoutMs": 300000,
     "scenarios": {
         "index.html": ["bootstrap"],
         "RainbowConnection.html": ["openProject", "saveExport"],

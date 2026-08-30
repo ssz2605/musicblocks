@@ -2,9 +2,9 @@ name: PerfSense Baseline Refresh
 
 env:
     # Immutable pin: same revision of PerfSense-AI used by perfsense.yml.
-    # 8a003d00 = PR #3: per-page scenario phases, render-ready openProject,
-    # shared plugin registry, pinned regression flag rule.
-    PERFSENSE_REF: 8a003d008b597210da969140eb1ec33c6294c00d
+    # 8db9d11 = PR #4: real seam counting (runFromBlockNow), transport
+    # pending/cancel handling, configurable port/runTimeoutMs.
+    PERFSENSE_REF: 8db9d11bfbeeb088f6201393ef76fdd18c368aa1
 
 # Regenerates baseline.json from master on a weekly schedule.
 # Opens a "chore: refresh perf baseline" PR for human review.
