@@ -2621,3 +2621,5 @@ if (typeof window !== "undefined") {
     window.Logo = Logo;
     window.Queue = Queue;
 }
+
+// PERF-VALIDATE mock: comment-only change on hot-path execution file.
