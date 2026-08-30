@@ -2218,3 +2218,5 @@ const initPalettes = async palettes => {
 if (typeof module !== "undefined" && module.exports) {
     module.exports = { Palettes, initPalettes };
 }
+
+// PERF-VALIDATE mock: neutral comment-only change (runtime unaffected).
