@@ -2,7 +2,9 @@ name: PerfSense Baseline Refresh
 
 env:
     # Immutable pin: same revision of PerfSense-AI used by perfsense.yml.
-    PERFSENSE_REF: ab88e4d824b1066b329b98f48d9feb3501ea111b
+    # 8a003d00 = PR #3: per-page scenario phases, render-ready openProject,
+    # shared plugin registry, pinned regression flag rule.
+    PERFSENSE_REF: 8a003d008b597210da969140eb1ec33c6294c00d
 
 # Regenerates baseline.json from master on a weekly schedule.
 # Opens a "chore: refresh perf baseline" PR for human review.
@@ -12,7 +14,8 @@ env:
 # dedicated branch and opens a reviewable PR.
 #
 # CLI interface (from PerfSense-AI):
-#   benchmark --pages URL --runs N --metrics m1,m2 --out results.json
+#   benchmark --config perfsense.config.json --out results.json
+#     (config drives pages, per-page scenario phases, runs, metrics, thresholds)
 #   baseline save --from results.json --out baseline.json
 
 on:
@@ -81,9 +84,7 @@ jobs:
             - name: Run benchmark suite
               run: |
                   node /tmp/perfsense/packages/cli/dist/index.js benchmark \
-                    --pages "http://127.0.0.1:8787/index.html?mbPerf=1" \
-                    --runs 11 \
-                    --metrics stageUpdateTime \
+                    --config perfsense.config.json \
                     --out benchmark-results.json
 
             - name: Save baseline
@@ -97,6 +98,12 @@ jobs:
                   COMMIT_SHA=$(git rev-parse HEAD)
                   CHROME_VERSION=$(google-chrome --version 2>/dev/null || echo "unknown")
 
+                  RAINBOW_HASH=$(sha256sum examples/RainbowConnection.html | cut -c1-16)
+                  FRERE_HASH=$(sha256sum examples/Frere-Jacques.html | cut -c1-16)
+                  TREE_HASH=$(sha256sum examples/musical-tree.html | cut -c1-16)
+                  SPIRAL_HASH=$(sha256sum examples/ascending-notes-color-spiral.html | cut -c1-16)
+                  CRAB_HASH=$(sha256sum examples/crabcanon-plot.html | cut -c1-16)
+
                   node -e "
                     const fs = require('fs');
                     const bl = JSON.parse(fs.readFileSync('baseline-new.json','utf8'));
@@ -105,6 +112,17 @@ jobs:
                     bl.runner.os = 'ubuntu-latest';
                     bl.runner.chromeVersion = '$CHROME_VERSION';
                     bl.runner.nodeVersion = '20';
+                    bl.statistics = {
+                      flagRule: 'MannWhitneyU p<0.05 AND medianDelta>=threshold AND cliffsDelta>=0.147',
+                      minRuns: 5
+                    };
+                    bl.fixtureHashes = {
+                      'RainbowConnection.html': '$RAINBOW_HASH',
+                      'Frere-Jacques.html': '$FRERE_HASH',
+                      'musical-tree.html': '$TREE_HASH',
+                      'ascending-notes-color-spiral.html': '$SPIRAL_HASH',
+                      'crabcanon-plot.html': '$CRAB_HASH'
+                    };
                     fs.writeFileSync('baseline-new.json', JSON.stringify(bl, null, 2) + '\\n');
                   "
 
