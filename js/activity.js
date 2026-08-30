@@ -2879,8 +2879,25 @@ class Activity {
                     }
                 };
                 mbBridge.ui = {
-                    save: async () => this.save.saveHTML(),
-                    exportMIDI: async () => this.save.saveMIDI()
+                    save: async () => this.save.saveHTML(this),
+                    exportMIDI: () =>
+                        new Promise(resolve => {
+                            // saveMIDI() exports asynchronously via runLogoCommands();
+                            // completion lands in afterSaveMIDI(), so hook it to
+                            // resolve the promise and keep the real generate-and-
+                            // download timing in the measured value.
+                            const origAfterSaveMIDI = this.save.afterSaveMIDI.bind(this.save);
+                            this.save.afterSaveMIDI = () => {
+                                this.save.afterSaveMIDI = origAfterSaveMIDI;
+                                try {
+                                    origAfterSaveMIDI();
+                                } catch (e) {
+                                    // Measure the timing anyway; the run continues.
+                                }
+                                resolve();
+                            };
+                            this.save.saveMIDI(this);
+                        })
                 };
                 mbBridge.perfMarks = {
                     openStart: null
