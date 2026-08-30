@@ -2,7 +2,7 @@ name: PerfSense Baseline Refresh
 
 env:
     # Immutable pin: same revision of PerfSense-AI used by perfsense.yml.
-    PERFSENSE_REF: 25a48f1dbde8b6c732a30340ff422ffc8566c1ad
+    PERFSENSE_REF: ab88e4d824b1066b329b98f48d9feb3501ea111b
 
 # Regenerates baseline.json from master on a weekly schedule.
 # Opens a "chore: refresh perf baseline" PR for human review.

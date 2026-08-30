@@ -4,7 +4,7 @@ env:
     # Immutable pin: this workflow always builds and runs this exact
     # revision of PerfSense-AI. Verify the SHA is still current before
     # changing it (tags do not exist on the repo yet).
-    PERFSENSE_REF: 25a48f1dbde8b6c732a30340ff422ffc8566c1ad
+    PERFSENSE_REF: ab88e4d824b1066b329b98f48d9feb3501ea111b
 
 # Runs on PRs that touch runtime code. Posts a single performance comparison
 # comment. Comment-only — never fails checks or blocks merges.
