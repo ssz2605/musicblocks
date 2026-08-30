@@ -4,7 +4,9 @@ env:
     # Immutable pin: this workflow always builds and runs this exact
     # revision of PerfSense-AI. Verify the SHA is still current before
     # changing it (tags do not exist on the repo yet).
-    PERFSENSE_REF: ab88e4d824b1066b329b98f48d9feb3501ea111b
+    # 8a003d00 = PR #3: per-page scenario phases, render-ready openProject,
+    # shared plugin registry, pinned regression flag rule.
+    PERFSENSE_REF: 8a003d008b597210da969140eb1ec33c6294c00d
 
 # Runs on PRs that touch runtime code. Posts a single performance comparison
 # comment. Comment-only — never fails checks or blocks merges.
@@ -22,7 +24,8 @@ env:
 # expected numeric samples. An empty/failed run never posts a comparison.
 #
 # CLI interface (from PerfSense-AI):
-#   benchmark --pages URL --runs N --metrics m1,m2 --out results.json
+#   benchmark --config perfsense.config.json --out results.json
+#     (config drives pages, per-page scenario phases, runs, metrics, thresholds)
 #   baseline save --from results.json --out baseline.json
 #   report --baseline baseline.json --current results.json --config config.json --repository .
 #     (outputs markdown to stdout)
@@ -127,23 +130,36 @@ jobs:
                   set +e
                   set -o pipefail
                   node /tmp/perfsense/packages/cli/dist/index.js benchmark \
-                    --pages "http://127.0.0.1:8787/index.html?mbPerf=1" \
-                    --runs 11 \
-                    --metrics stageUpdateTime \
+                    --config perfsense.config.json \
                     --out pr-results.json 2>&1 | tee benchmark.log
                   BENCH_EXIT=$?
                   echo "benchmark_exit=$BENCH_EXIT" >> "$GITHUB_ENV"
 
-                  SAMPLE_COUNT=$(node -e "const r=require('./pr-results.json');const runs=(r[0]&&r[0].runs)||[];const n=runs.filter(x=>x.metrics&&typeof x.metrics.stageUpdateTime==='number'&&Number.isFinite(x.metrics.stageUpdateTime)).length;console.log(n)" 2>/dev/null)
+                  SAMPLE_COUNT=$(node -e "
+                    const r = require('./pr-results.json');
+                    let total = 0;
+                    for (const p of r || []) {
+                      for (const run of p.runs || []) {
+                        total += Object.values(run.metrics || {}).filter(
+                          v => typeof v === 'number' && Number.isFinite(v)).length;
+                      }
+                    }
+                    console.log(total);" 2>/dev/null)
                   SAMPLE_COUNT="${SAMPLE_COUNT:-0}"
                   echo "sample_count=$SAMPLE_COUNT" >> "$GITHUB_OUTPUT"
 
+                  EXPECTED_SAMPLES=$(node -e "
+                    const cfg = require('./perfsense.config.json');
+                    console.log((cfg.pages || []).length * (cfg.runs || 5));" 2>/dev/null)
+                  EXPECTED_SAMPLES="${EXPECTED_SAMPLES:-30}"
+                  echo "expected_samples=$EXPECTED_SAMPLES" >> "$GITHUB_OUTPUT"
+
                   if [ "$BENCH_EXIT" -ne 0 ] || [ "$SAMPLE_COUNT" -lt 1 ]; then
-                    echo "::error::Benchmark produced no valid stageUpdateTime samples; no comparison will be posted."
+                    echo "::error::Benchmark produced no valid metric samples; no comparison will be posted."
                     echo "has_results=false" >> "$GITHUB_OUTPUT"
                   else
-                    if [ "$SAMPLE_COUNT" -lt 11 ]; then
-                      echo "::warning::Benchmark produced only $SAMPLE_COUNT/11 valid samples"
+                    if [ "$SAMPLE_COUNT" -lt "$EXPECTED_SAMPLES" ]; then
+                      echo "::warning::Benchmark produced only $SAMPLE_COUNT/$EXPECTED_SAMPLES expected samples (pages x runs x metrics)"
                     fi
                     echo "has_results=true" >> "$GITHUB_OUTPUT"
                   fi
@@ -178,11 +194,11 @@ jobs:
                     echo "## PerfSense Performance Report"
                     echo ""
                     echo "**PR:** #${{ github.event.pull_request.number }} · **Head:** \`$HEAD_SHA\` · **Time:** $TIMESTAMP"
-                    echo "**Baseline:** \`origin/master\` · **Metric:** stageUpdateTime · **Runs:** 11"
+                    echo "**Baseline:** \`origin/master\` · **Matrix:** 6 fixtures × ${{ steps.benchmark.outputs.expected_samples }} samples"
                     echo ""
 
                     if [ "${{ steps.benchmark.outputs.has_results }}" != "true" ]; then
-                      echo "> Warning: Benchmarks did not produce valid stageUpdateTime samples. No comparison was made. Check workflow logs."
+                      echo "> Warning: Benchmarks did not produce valid metric samples. No comparison was made. Check workflow logs."
                       echo ""
                     elif [ "${{ steps.report.outputs.has_report }}" != "true" ]; then
                       echo "> Warning: Report could not be generated. Results available but not compared."
@@ -190,15 +206,15 @@ jobs:
                     else
                       cat report-output.md
                       echo ""
-                      if [ "${{ steps.benchmark.outputs.sample_count }}" != "11" ]; then
-                        echo "> Warning: Only ${{ steps.benchmark.outputs.sample_count }}/11 benchmark samples were valid."
+                      if [ "${{ steps.benchmark.outputs.sample_count }}" != "${{ steps.benchmark.outputs.expected_samples }}" ]; then
+                        echo "> Warning: Only ${{ steps.benchmark.outputs.sample_count }}/${{ steps.benchmark.outputs.expected_samples }} expected samples were valid."
                         echo ""
                       fi
                     fi
 
                     echo "---"
                     echo "*Comment-only · non-blocking · never fails checks or blocks merges*"
-                    echo "*Classification: median % delta vs thresholds (warning 10% / fail 25%). Mann-Whitney U + Cliff's delta are only computed when both samples have at least 6 valid runs (current: 11).*"
+                    echo "*Classification: Mann-Whitney U (p<0.05) AND median Δ ≥ threshold AND Cliff's δ ≥ 0.147 on distributions of **≥ 5 valid runs per fixture**. Timing thresholds from config (warning 10% / fail 25% default; audio/memory metrics get wider or 15% memory thresholds).*"
                   } > comment-body.md
 
             - name: Post or update PR comment

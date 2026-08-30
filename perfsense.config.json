@@ -1,8 +1,61 @@
 {
-    "pages": ["http://127.0.0.1:8787/index.html?mbPerf=1"],
-    "runs": 11,
-    "metrics": ["stageUpdateTime"],
+    "pages": [
+        "http://127.0.0.1:8787/index.html?mbPerf=1",
+        "http://127.0.0.1:8787/index.html?mbPerf=1&perfsenseProject=RainbowConnection.html",
+        "http://127.0.0.1:8787/index.html?mbPerf=1&perfsenseProject=Frere-Jacques.html",
+        "http://127.0.0.1:8787/index.html?mbPerf=1&perfsenseProject=musical-tree.html",
+        "http://127.0.0.1:8787/index.html?mbPerf=1&perfsenseProject=ascending-notes-color-spiral.html",
+        "http://127.0.0.1:8787/index.html?mbPerf=1&perfsenseProject=crabcanon-plot.html"
+    ],
+    "runs": 5,
+    "scenarios": {
+        "index.html": ["bootstrap"],
+        "RainbowConnection.html": ["openProject", "saveExport"],
+        "Frere-Jacques.html": ["openProject", "playToCompletion"],
+        "musical-tree.html": ["openProject", "playToCompletion"],
+        "ascending-notes-color-spiral.html": ["openProject", "playToCompletion"],
+        "crabcanon-plot.html": ["openProject", "playToCompletion"]
+    },
+    "fixtures": {
+        "RainbowConnection.html": "examples/RainbowConnection.html",
+        "Frere-Jacques.html": "examples/Frere-Jacques.html",
+        "musical-tree.html": "examples/musical-tree.html",
+        "ascending-notes-color-spiral.html": "examples/ascending-notes-color-spiral.html",
+        "crabcanon-plot.html": "examples/crabcanon-plot.html"
+    },
+    "metrics": [
+        "bootstrapTotal",
+        "initTotal",
+        "heapAfterBoot",
+        "projectLoadTime",
+        "saveTime",
+        "exportMIDITime",
+        "callbackLatencyMean",
+        "callbackLatencyMax",
+        "cumulativeDrift",
+        "voiceOnsetError",
+        "executionTime",
+        "maxQueueDepth",
+        "blocksExecuted",
+        "maxDepth",
+        "memoryDelta",
+        "retainedHeap"
+    ],
     "thresholds": {
-        "stageUpdateTime": { "warning": 10, "fail": 25 }
+        "bootstrapTotal": { "warning": 10, "fail": 25 },
+        "initTotal": { "warning": 10, "fail": 25 },
+        "projectLoadTime": { "warning": 10, "fail": 25 },
+        "saveTime": { "warning": 10, "fail": 25 },
+        "exportMIDITime": { "warning": 10, "fail": 25 },
+        "executionTime": { "warning": 10, "fail": 25 },
+        "maxQueueDepth": { "warning": 10, "fail": 25 },
+        "blocksExecuted": { "warning": 10, "fail": 25 },
+        "callbackLatencyMean": { "warning": 30, "fail": 60 },
+        "callbackLatencyMax": { "warning": 30, "fail": 60 },
+        "cumulativeDrift": { "warning": 30, "fail": 60 },
+        "voiceOnsetError": { "warning": 30, "fail": 60 },
+        "memoryDelta": { "warning": 15, "fail": 30 },
+        "retainedHeap": { "warning": 15, "fail": 30 },
+        "heapAfterBoot": { "warning": 15, "fail": 30 }
     }
 }
