@@ -2166,7 +2166,15 @@ class Logo {
             // eslint-disable-next-line eqeqeq
             if (tur.parentFlowQueue != undefined) {
                 tur.parentFlowQueue.push(blk);
-                tur.queue.push(queueBlock);
+                if (blockName === "repeat" && childFlowCount > 1) {
+                    // Queue one entry per iteration up front so every
+                    // loop iteration stays pending in the turtle queue.
+                    for (let i = 0; i < childFlowCount; i++) {
+                        tur.queue.push(new Queue(childFlow, 1, blk, receivedArg));
+                    }
+                } else {
+                    tur.queue.push(queueBlock);
+                }
             }
         }
 
