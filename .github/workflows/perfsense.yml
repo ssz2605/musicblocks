@@ -1,36 +1,8 @@
 name: PerfSense Benchmark
 
 env:
-    # Immutable pin: this workflow always builds and runs this exact
-    # revision of PerfSense-AI. Verify the SHA is still current before
-    # changing it (tags do not exist on the repo yet).
-    # e3fe235 = driver corrections: ready-gate on the real bridge (fixture is
-    #           never dropped before the #myOpenFile handler exists), post-drop
-    #           verification via perfMarks.openStart, playback proof
-    #           (isRunning within 20s), headless autoplay flag, maxQ reset.
+    # PerfSense-AI revision pinned for reproducible runs.
     PERFSENSE_REF: e3fe235794396d885b88b0156380a99f2067e4fa
-
-# Runs on PRs that touch runtime code. Posts a single performance comparison
-# comment. Comment-only — never fails checks or blocks merges.
-# Runtime-file filtering happens in the "Check runtime files changed" step:
-# event-level `paths` filters do not dispatch reliably on fork PRs.
-#
-# Baseline: PRs always compare against baseline.json fetched from
-# origin/master at run time, so a PR can never change the baseline it is
-# compared against, and stale branches never use an outdated baseline. The
-# baseline file itself is refreshed via the reviewable PR opened by
-# perfsense-baseline.yml. If origin/master has no baseline, the run is
-# skipped with no comment.
-#
-# Integrity: the benchmark step validates that pr-results.json contains the
-# expected numeric samples. An empty/failed run never posts a comparison.
-#
-# CLI interface (from PerfSense-AI):
-#   benchmark --config perfsense.config.json --out results.json
-#     (config drives pages, per-page scenario phases, runs, metrics, thresholds)
-#   baseline save --from results.json --out baseline.json
-#   report --baseline baseline.json --current results.json --config config.json --repository .
-#     (outputs markdown to stdout)
 
 on:
     pull_request:
@@ -59,11 +31,7 @@ jobs:
             - name: Check runtime files changed
               id: changed
               run: |
-                  # Skip provably inert changes: test files under js/ (jest
-                  # __tests__ and *.test.js) never affect runtime performance,
-                  # so a tests-only PR must not trigger a benchmark. Anything
-                  # outside the runtime pathspec (docs, locales, sounds, images,
-                  # .github, README...) is already excluded by the pathspec.
+                  # Skip if no runtime files changed (docs/tests-only PRs).
                   if git diff --exit-code --quiet \
                     "${{ github.event.pull_request.base.sha }}" \
                     "${{ github.event.pull_request.head.sha }}" \
@@ -157,13 +125,7 @@ jobs:
                   SAMPLE_COUNT="${SAMPLE_COUNT:-0}"
                   echo "sample_count=$SAMPLE_COUNT" >> "$GITHUB_OUTPUT"
 
-                  # Metrics-aware denominator: the authoritative baseline records
-                  # one values[] array per page x metric, so the expected number
-                  # of finite samples is the total values count in baseline.json.
-                  # The old pages x runs formula (30) is dimensionally wrong
-                  # (it omits the metrics factor) and made the partial-run
-                  # warning dead code. Fall back to it only when no baseline
-                  # is available.
+                  # Expected samples: total values[] entries in baseline.json.
                   EXPECTED_SAMPLES=$(node -e "
                     try {
                       const bl = require('./baseline.json');

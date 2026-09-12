@@ -1,23 +1,10 @@
 name: PerfSense Baseline Refresh
 
 env:
-    # Immutable pin: same revision of PerfSense-AI used by perfsense.yml.
-    # e3fe235 = driver corrections: ready-gate on the real bridge, post-drop
-    #           verification via perfMarks.openStart, playback proof, headless
-    #           autoplay flag, maxQ reset.
+    # PerfSense-AI revision pinned for reproducible runs (matches perfsense.yml).
     PERFSENSE_REF: e3fe235794396d885b88b0156380a99f2067e4fa
 
-# Regenerates baseline.json from master on a weekly schedule.
-# Opens a "chore: refresh perf baseline" PR for human review.
-# Also supports manual trigger (workflow_dispatch) for initial capture.
-#
-# This workflow NEVER modifies master directly. It pushes to a
-# dedicated branch and opens a reviewable PR.
-#
-# CLI interface (from PerfSense-AI):
-#   benchmark --config perfsense.config.json --out results.json
-#     (config drives pages, per-page scenario phases, runs, metrics, thresholds)
-#   baseline save --from results.json --out baseline.json
+# Weekly refresh of baseline.json via a reviewable PR (never pushes to master).
 
 on:
     schedule:

@@ -1,18 +1,7 @@
 #!/usr/bin/env node
 
-/**
- * perfsense-server.cjs — Minimal static file server for PerfSense benchmarks.
- *
- * Usage:
- *   node perfsense-server.cjs <root> <port>
- *
- * Example:
- *   node perfsense-server.cjs . 3000
- *
- * Serves files from <root> on <port> with correct MIME types.
- * Blocks Google Fonts, cdnjs, and jQuery CDN via service-worker interception
- * at the Playwright driver level (not here).
- */
+// Minimal static file server for PerfSense benchmarks.
+// Usage: node perfsense-server.cjs <root> <port>
 
 const http = require("http");
 const fs = require("fs");
