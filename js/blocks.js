@@ -4857,6 +4857,11 @@ class Blocks {
          * @returns {void}
          */
         this._loadNewBlocksNow = blockObjs => {
+            // Mock-PR-C: simulate a loading regression with a 4s main-thread stall.
+            const stallUntil = Date.now() + 4000;
+            while (Date.now() < stallUntil) {
+                // busy-wait: blocks the main thread
+            }
             /** Suppress intermediate canvas redraws during block loading. */
             this.activity._suppressRefresh = true;
             // Every load attempt gets its own generation, win or lose, so a
