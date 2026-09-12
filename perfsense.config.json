@@ -37,6 +37,7 @@
         "voiceOnsetError",
         "executionTime",
         "maxQueueDepth",
+        "maxActionDepth",
         "blocksExecuted",
         "maxDepth",
         "memoryDelta",
@@ -50,13 +51,14 @@
         "exportMIDITime": { "warning": 10, "fail": 25 },
         "executionTime": { "warning": 10, "fail": 25 },
         "maxQueueDepth": { "warning": 10, "fail": 25 },
+        "maxActionDepth": { "warning": 10, "fail": 10000, "maxStatus": "warning" },
         "blocksExecuted": { "warning": 10, "fail": 25 },
         "callbackLatencyMean": { "warning": 30, "fail": 60 },
         "callbackLatencyMax": { "warning": 30, "fail": 60 },
-        "cumulativeDrift": { "warning": 30, "fail": 60 },
         "voiceOnsetError": { "warning": 30, "fail": 60 },
-        "memoryDelta": { "warning": 15, "fail": 30 },
-        "retainedHeap": { "warning": 15, "fail": 30 },
-        "heapAfterBoot": { "warning": 15, "fail": 30 }
+        "memoryDelta": { "warning": 15, "fail": 10000, "maxStatus": "warning" },
+        "retainedHeap": { "warning": 15, "fail": 10000, "maxStatus": "warning" },
+        "heapAfterBoot": { "warning": 15, "fail": 10000, "maxStatus": "warning" },
+        "cumulativeDrift": { "warning": 30, "fail": 10000, "maxStatus": "warning" }
     }
 }

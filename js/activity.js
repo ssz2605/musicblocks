@@ -2880,21 +2880,36 @@ class Activity {
                     save: async () => this.save.saveHTML(this),
                     exportMIDI: () =>
                         new Promise(resolve => {
-                            // saveMIDI() exports asynchronously via runLogoCommands();
-                            // completion lands in afterSaveMIDI(), so hook it to
-                            // resolve the promise and keep the real generate-and-
-                            // download timing in the measured value.
-                            const origAfterSaveMIDI = this.save.afterSaveMIDI.bind(this.save);
-                            this.save.afterSaveMIDI = () => {
-                                this.save.afterSaveMIDI = origAfterSaveMIDI;
+                            // saveMIDI() exports asynchronously via runLogoCommands().
+                            // afterSaveMIDI() only SCHEDULES the real generate and
+                            // download inside a setTimeout(500); resolving there would
+                            // stop the clock before the actual export work, making
+                            // exportMIDITime understate the true boundary. Hook
+                            // save.download - the last synchronous step of the
+                            // deferred generateMidi - so the promise resolves only
+                            // after the generate-and-download work completes.
+                            const save = this.save;
+                            const origAfterSaveMIDI = save.afterSaveMIDI.bind(save);
+                            const origDownload = save.download.bind(save);
+                            save.afterSaveMIDI = () => {
+                                save.afterSaveMIDI = origAfterSaveMIDI;
+                                save.download = (extension, dataurl, defaultfilename) => {
+                                    save.download = origDownload;
+                                    try {
+                                        origDownload(extension, dataurl, defaultfilename);
+                                    } catch (e) {
+                                        // Measure the timing anyway; the run continues.
+                                    }
+                                    resolve();
+                                };
                                 try {
                                     origAfterSaveMIDI();
                                 } catch (e) {
-                                    // Measure the timing anyway; the run continues.
+                                    save.download = origDownload;
+                                    resolve();
                                 }
-                                resolve();
                             };
-                            this.save.saveMIDI(this);
+                            save.saveMIDI(this);
                         })
                 };
                 mbBridge.perfMarks = {

@@ -4,9 +4,9 @@ env:
     # Immutable pin: this workflow always builds and runs this exact
     # revision of PerfSense-AI. Verify the SHA is still current before
     # changing it (tags do not exist on the repo yet).
-    # 8db9d11 = PR #4: real seam counting (runFromBlockNow), transport
-    # pending/cancel handling, configurable port/runTimeoutMs.
-    PERFSENSE_REF: 8db9d11bfbeeb088f6201393ef76fdd18c368aa1
+    # 09eab18 = probe corrections: real turtleList resolution (maxQueueDepth),
+    #           new maxActionDepth probe, runtime fallback read.
+    PERFSENSE_REF: 09eab18bf796e426fada2c04d9a29fdc58f34b56
 
 # Runs on PRs that touch runtime code. Posts a single performance comparison
 # comment. Comment-only — never fails checks or blocks merges.
@@ -57,10 +57,17 @@ jobs:
             - name: Check runtime files changed
               id: changed
               run: |
+                  # Skip provably inert changes: test files under js/ (jest
+                  # __tests__ and *.test.js) never affect runtime performance,
+                  # so a tests-only PR must not trigger a benchmark. Anything
+                  # outside the runtime pathspec (docs, locales, sounds, images,
+                  # .github, README...) is already excluded by the pathspec.
                   if git diff --exit-code --quiet \
                     "${{ github.event.pull_request.base.sha }}" \
                     "${{ github.event.pull_request.head.sha }}" \
-                    -- js css dist index.html; then
+                    -- js css dist index.html \
+                    ':(exclude)js/**/__tests__/**' \
+                    ':(exclude)js/**/*.test.js'; then
                     echo "No runtime files changed; skipping PerfSense benchmark."
                     echo "changed=false" >> "$GITHUB_OUTPUT"
                   else
@@ -148,17 +155,38 @@ jobs:
                   SAMPLE_COUNT="${SAMPLE_COUNT:-0}"
                   echo "sample_count=$SAMPLE_COUNT" >> "$GITHUB_OUTPUT"
 
+                  # Metrics-aware denominator: the authoritative baseline records
+                  # one values[] array per page x metric, so the expected number
+                  # of finite samples is the total values count in baseline.json.
+                  # The old pages x runs formula (30) is dimensionally wrong
+                  # (it omits the metrics factor) and made the partial-run
+                  # warning dead code. Fall back to it only when no baseline
+                  # is available.
                   EXPECTED_SAMPLES=$(node -e "
+                    try {
+                      const bl = require('./baseline.json');
+                      let total = 0;
+                      for (const page of Object.values(bl.pages || {})) {
+                        for (const m of Object.values(page || {})) {
+                          if (m && Array.isArray(m.values)) total += m.values.length;
+                        }
+                      }
+                      if (total > 0) { console.log(total); return; }
+                    } catch (e) { /* fall through to estimate */ }
                     const cfg = require('./perfsense.config.json');
                     console.log((cfg.pages || []).length * (cfg.runs || 5));" 2>/dev/null)
                   EXPECTED_SAMPLES="${EXPECTED_SAMPLES:-30}"
                   echo "expected_samples=$EXPECTED_SAMPLES" >> "$GITHUB_OUTPUT"
+                  # Tolerance band: warn below 90% (partial run), tolerate
+                  # extras above 100% (new metrics may legitimately appear).
+                  SAMPLE_FLOOR=$(node -e "console.log(Math.floor($EXPECTED_SAMPLES * 0.9))")
+                  echo "sample_floor=$SAMPLE_FLOOR" >> "$GITHUB_OUTPUT"
 
                   if [ "$BENCH_EXIT" -ne 0 ] || [ "$SAMPLE_COUNT" -lt 1 ]; then
                     echo "::error::Benchmark produced no valid metric samples; no comparison will be posted."
                     echo "has_results=false" >> "$GITHUB_OUTPUT"
                   else
-                    if [ "$SAMPLE_COUNT" -lt "$EXPECTED_SAMPLES" ]; then
+                    if [ "$SAMPLE_COUNT" -lt "$SAMPLE_FLOOR" ]; then
                       echo "::warning::Benchmark produced only $SAMPLE_COUNT/$EXPECTED_SAMPLES expected samples (pages x runs x metrics)"
                     fi
                     echo "has_results=true" >> "$GITHUB_OUTPUT"
@@ -194,7 +222,7 @@ jobs:
                     echo "## PerfSense Performance Report"
                     echo ""
                     echo "**PR:** #${{ github.event.pull_request.number }} · **Head:** \`$HEAD_SHA\` · **Time:** $TIMESTAMP"
-                    echo "**Baseline:** \`origin/master\` · **Matrix:** 6 fixtures × ${{ steps.benchmark.outputs.expected_samples }} samples"
+                    echo "**Baseline:** \`origin/master\` · **Matrix:** ${{ steps.benchmark.outputs.expected_samples }} expected samples"
                     echo ""
 
                     if [ "${{ steps.benchmark.outputs.has_results }}" != "true" ]; then
@@ -206,7 +234,7 @@ jobs:
                     else
                       cat report-output.md
                       echo ""
-                      if [ "${{ steps.benchmark.outputs.sample_count }}" != "${{ steps.benchmark.outputs.expected_samples }}" ]; then
+                      if [ "${{ steps.benchmark.outputs.sample_count }}" -lt "${{ steps.benchmark.outputs.sample_floor }}" ]; then
                         echo "> Warning: Only ${{ steps.benchmark.outputs.sample_count }}/${{ steps.benchmark.outputs.expected_samples }} expected samples were valid."
                         echo ""
                       fi

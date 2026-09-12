@@ -2,9 +2,9 @@ name: PerfSense Baseline Refresh
 
 env:
     # Immutable pin: same revision of PerfSense-AI used by perfsense.yml.
-    # 8db9d11 = PR #4: real seam counting (runFromBlockNow), transport
-    # pending/cancel handling, configurable port/runTimeoutMs.
-    PERFSENSE_REF: 8db9d11bfbeeb088f6201393ef76fdd18c368aa1
+    # 09eab18 = probe corrections: real turtleList resolution (maxQueueDepth),
+    #           new maxActionDepth probe, runtime fallback read.
+    PERFSENSE_REF: 09eab18bf796e426fada2c04d9a29fdc58f34b56
 
 # Regenerates baseline.json from master on a weekly schedule.
 # Opens a "chore: refresh perf baseline" PR for human review.
