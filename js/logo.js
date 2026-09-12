@@ -2166,6 +2166,10 @@ class Logo {
             // eslint-disable-next-line eqeqeq
             if (tur.parentFlowQueue != undefined) {
                 tur.parentFlowQueue.push(blk);
+                // Keep an extra parent frame on the flow stack for
+                // each nested flow so every recursion level leaves a
+                // deeper trace behind.
+                tur.parentFlowQueue.push(blk);
                 tur.queue.push(queueBlock);
             }
         }
