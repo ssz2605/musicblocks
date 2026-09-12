@@ -1,7 +1,8 @@
 # PerfSense: Performance Regression Detection for Music Blocks
 
 **Author:** Shreya Saxena
-**Status:** Validated on forked PRs (#14-#17, all expected outcomes); ready for upstream
+**Status:** Probe corrections merged on fork; full 9-scenario re-validation on the
+corrected baseline in progress (see §6). Not yet offered upstream.
 **Scope:** Comment-only analysis. Never fails a check, never blocks a merge.
 
 ---
@@ -35,20 +36,27 @@ performance concern.
 | **Empty** | Isolates app startup cost | `bootstrapTotal`, `initTotal`, `heapAfterBoot` |
 | **Rainbow Connection** (5.7k blocks, 1.5MB, largest in repo) | Project loading, save/export, memory; protects PR #7923 load-suppression optimization | `projectLoadTime`, `saveTime`, `exportMIDITime`, `memoryDelta`, `retainedHeap` |
 | **Frère Jacques** (4-voice round) | Tone.js/Transport scheduling precision; protects PR #7703 scheduler migration | `callbackLatencyMean`, `callbackLatencyMax`, `cumulativeDrift`, `voiceOnsetError` |
-| **musical-tree** (recursive fractal drawing) | Recursive/action-heavy execution, queue & memory stress | `maxQueueDepth`, `executionTime`, `memoryDelta`, `retainedHeap`, `maxDepth*` |
-| **ascending-notes-color-spiral** (46 blocks, completes <1s) | Interpreter throughput / block execution — cheap full-run smoke signal | `executionTime`, `maxDepth*`, `blocksExecuted` |
-| **crabcanon-plot** (2 staggered turtles) | Concurrent two-voice scheduling | `scheduleLagMean`, `scheduleLagMax` |
+| **musical-tree** (recursive fractal drawing) | Recursive/action-heavy execution, queue & memory stress | `maxQueueDepth`, `maxActionDepth`, `executionTime`, `memoryDelta`, `retainedHeap`, `maxDepth` |
+| **ascending-notes-color-spiral** (46 blocks, completes <1s) | Interpreter throughput / block execution — cheap full-run smoke signal | `executionTime`, `maxQueueDepth`, `maxActionDepth`, `maxDepth`, `blocksExecuted` |
+| **crabcanon-plot** (2 staggered turtles) | Concurrent two-voice scheduling | `callbackLatencyMean`, `callbackLatencyMax`, `cumulativeDrift`, `voiceOnsetError` |
 
 ### Notes
 
-- **`maxDepth*` is unverified** until its semantics are fixed. Today the instrument
-  (`enterBlock`/`exitBlock` at `logo.js`) tracks JS call nesting of one function and
-  always reads 1, regardless of program recursion depth — so it is tracked as a
-  **sanity** field only, not a regression signal.
-- **`maxQueueDepth`** (max `tur.queue.length` across turtles during a run, sampled per
-  executed block) is the **real** recursion/scheduling-pressure signal. Musical-tree's
-  recursive action calls explode the queue (hundreds of pending blocks) while linear
-  songs stay flat. It catches runaway/infinite action loops early.
+- **`maxDepth`** is **sanity-tracked only**, not a regression signal. The instrument
+  tracks synchronous JS call nesting of `runFromBlockNow`; it is not reliable for
+  program recursion depth. Program-level nesting is covered by `maxActionDepth`
+  below instead.
+- **`maxActionDepth`** (max per-turtle `queue.length + parentFlowQueue.length` during
+  a run, sampled on every executed block) is the **real recursion/scheduling-pressure
+  signal**. musical-tree's recursive action calls explode the depth while linear songs
+  stay flat. It catches runaway/infinite action loops early and is what a
+  recursion-regression PR moves (validated in §6 scenario E).
+- **`maxQueueDepth`** (max per-turtle `queue.length` across turtles during a run,
+  sampled per executed block) tracks raw queue accumulation, e.g. a queue-ladder
+  regression (validated in §6 scenario D). Both samplers read the real turtle array
+  (`window.__mb.turtles.turtleList`); previously they looked at a legacy `.turtles`
+  property that does not exist on the container, so `maxQueueDepth` read 0 on real
+  runs — fixed in the probe-correction commit.
 - **`blocksExecuted`** sanity-checks `executionTime`: a stable block count with rising
   time is a genuine slowdown; a changing block count means the workload itself changed.
 - **Rejected fixtures** (with concrete reasons): chopsticks, animated-circles, and
@@ -68,6 +76,7 @@ performance concern.
 | `projectLoadTime`, `saveTime`, `exportMIDITime` | Real UI interaction timing (`setInputFiles('#myOpenFile')` → poll-ready; Save/export menus) |
 | `callbackLatency*`, `cumulativeDrift`, `voiceOnsetError` | Page-level injector wrapping the `synth.transport.schedule` seam (`js/logo.js:1781`) — the exact method PR #7703 used |
 | `maxQueueDepth`, `blocksExecuted` | Page-level injector sampling `tur.queue.length` / counting `runFromBlockNow` |
+| `maxActionDepth` | Page-level injector sampling per-turtle `queue.length + parentFlowQueue.length` (same sampler as `maxQueueDepth`) |
 | `heapAfterBoot`, `retainedHeap` | CDP precise memory + double-run retained-heap sampling (leak guard) |
 
 ---
@@ -80,19 +89,37 @@ against one sample. This accounts for CI noise.
 
 ```json
 {
-  "schema": "perfsense/1",
-  "capturedAt": "2026-08-24T09:12:00Z",
-  "commitSha": "<main sha>",
+  "schema": "perfsense-baseline-v1",
+  "createdAt": "2026-08-30T14:47:17.635Z",
   "runs": 5,
+  "pages": {
+    "index.html": {
+      "bootstrapTotal": {
+        "median": 5540.9,
+        "p10": 5519.9,
+        "p90": 5546.1,
+        "values": [5547.5, 5544, 5518.9, 5521.4, 5540.9]
+      }
+    },
+    "RainbowConnection.html": {
+      "projectLoadTime": {
+        "median": 6659.9,
+        "p10": 6653.3,
+        "p90": 6667.5,
+        "values": [6660.2, 6659.9, 6655.8, 6672.3, 6651.6]
+      }
+    }
+  },
+  "source": "cli benchmark --out results.json",
+  "commitSha": "<main sha>",
+  "runner": {
+    "os": "ubuntu-latest",
+    "chromeVersion": "151.x.x.x",
+    "nodeVersion": "20.x"
+  },
   "statistics": {
     "flagRule": "MannWhitneyU p<0.05 AND medianDelta>=threshold AND cliffsDelta>=0.147",
     "minRuns": 5
-  },
-  "runner": {
-    "os": "ubuntu-latest",
-    "chromeVersion": "137.x.x.x",
-    "nodeVersion": "20.x",
-    "playwrightVersion": "1.x"
   },
   "fixtureHashes": {
     "RainbowConnection.html": "<sha256>",
@@ -100,26 +127,16 @@ against one sample. This accounts for CI noise.
     "musical-tree.html": "<sha256>",
     "crabcanon-plot.html": "<sha256>",
     "ascending-notes-color-spiral.html": "<sha256>"
-  },
-  "metrics": [
-    {
-      "fixture": "rainbow-connection",
-      "metric": "projectLoadTime",
-      "unit": "ms",
-      "tier": "core",
-      "samples": [4812, 4855, 4790, 4921, 4840],
-      "median": 4840,
-      "p25": 4812,
-      "p75": 4921
-    }
-  ]
+  }
 }
 ```
 
 Contents in words: **metadata** (schema, capture time/commit, run count, flagging
 rule), **runner identity** (so a Chrome/OS image bump is visible, not silent),
-**fixture hashes** (an edit invalidates comparison), and **20 metric entries** — each
-storing raw samples + precomputed median/quartiles.
+**fixture hashes** (an edit invalidates comparison), and a **pages-keyed map**: for
+each measured page, each metric stores its raw samples plus precomputed
+median/p10/p90. The checker compares the PR run's distribution against the stored
+samples for the same page+metric.
 
 The baseline is generated **on `main` by the same driver/environment as PR runs**, so
 PR measurements differ only in code — that is the variable the comparison wants.
@@ -133,48 +150,62 @@ reviewable PR, and guarded by file hashes so editing a fixture cannot silently m
 Two repos. The Music Blocks repo holds **data/config only** (no app code changes);
 all framework code lives in PerfSense.
 
-### Music Blocks repo (4 files, zero app-code changes)
+### Music Blocks repo (config + workflows + one instrumentation hook; no app logic)
 
 ```
 musicblocks/
-├── perfsense.config.json          # fixtures, metrics per fixture, scenarios, tiers,
-│                                  #   runs=5, trigger paths, label overrides
+├── perfsense.config.json          # pages (6), scenarios per page, runs=5, metrics,
+│                                  #   thresholds
 ├── baseline.json                  # approved CI baseline (Section 3), committed & diffable
-├── perfsense-server.cjs           # static benchmark server (restore from demo/pr-7923)
-└── .github/workflows/perfsense.yml
-                                   # job 1 (PR): serve → 6 fixtures × 5 runs →
-                                   #   check vs baseline.json → post comment (never fail)
-                                   # job 2 (cron): weekly re-baseline on main →
-                                   #   open "chore: refresh perf baseline" review PR
+├── perfsense-server.cjs           # static benchmark server (serves repo on port 8787)
+├── .github/workflows/perfsense.yml
+│                                  # PR job: serve → 6 fixtures × 5 runs →
+│                                  #   check vs baseline.json → post comment (never fail)
+├── .github/workflows/perfsense-baseline.yml
+│                                  # weekly + manual re-baseline on master →
+│                                  #   open "chore: refresh perf baseline" review PR
+└── js/activity.js                 # PerfSense bridge only: window.__mb hooks +
+                                   #   exportMIDI timing bridge (instrumentation, no
+                                   #   change to app behavior)
 ```
 
 ```jsonc
-// perfsense.config.json (shape)
+// perfsense.config.json (actual shape, 2026-09)
 {
-  "baseUrl": "http://127.0.0.1:3000",
-  "runs": 5,
-  "fixtures": [
-    { "name": "empty",              "scenario": "bootstrap" },
-    { "name": "rainbow-connection", "scenario": "open+save+export",
-      "file": "examples/RainbowConnection.html" },
-    { "name": "frere-jacques",      "scenario": "open+playToCompletion",
-      "file": "examples/Frere-Jacques.html", "probes": ["transportLag"] },
-    { "name": "musical-tree",       "scenario": "open+playToCompletion",
-      "file": "examples/musical-tree.html", "probes": ["queueDepth"] },
-    { "name": "ascending-spiral",   "scenario": "open+playToCompletion",
-      "file": "examples/ascending-notes-color-spiral.html",
-      "params": { "performance": "true" } },
-    { "name": "crabcanon-plot",     "scenario": "open+playToCompletion",
-      "file": "examples/crabcanon-plot.html", "probes": ["transportLag"] }
+  "pages": [
+    "http://127.0.0.1:8787/index.html?mbPerf=1",
+    "http://127.0.0.1:8787/index.html?mbPerf=1&perfsenseProject=RainbowConnection.html",
+    ...
   ],
-  "trigger": {
-    "paths":  ["js/**", "css/**", "dist/**", "index.html", "lib/**"],
-    "ignore": ["js/**/__tests__/**", "js/**/*.test.js"],
-    "fixtures": ["examples/RainbowConnection.html", "..."]
+  "runs": 5,
+  "runTimeoutMs": 300000,
+  "scenarios": {
+    "index.html": ["bootstrap"],
+    "RainbowConnection.html": ["openProject", "saveExport"],
+    "Frere-Jacques.html": ["openProject", "playToCompletion"],
+    ...
   },
-  "labels": { "forceRun": "perf", "skip": "skip-perf" }
+  "fixtures": {
+    "RainbowConnection.html": "examples/RainbowConnection.html",
+    ...
+  },
+  "metrics": [
+    "bootstrapTotal", "initTotal", "heapAfterBoot", "projectLoadTime",
+    "saveTime", "exportMIDITime", "callbackLatencyMean", "callbackLatencyMax",
+    "cumulativeDrift", "voiceOnsetError", "executionTime", "maxQueueDepth",
+    "maxActionDepth", "blocksExecuted", "maxDepth", "memoryDelta", "retainedHeap"
+  ],
+  "thresholds": {
+    "projectLoadTime": { "warning": 10, "fail": 25 },
+    "maxActionDepth": { "warning": 10, "fail": 10000, "maxStatus": "warning" },
+    ...
+  }
 }
 ```
+
+The PR trigger is a **plain pathspec filter** in `perfsense.yml` (`js css dist
+index.html`, excluding `js/**/__tests__/**` and `js/**/*.test.js`) — no label
+wiring, per scope decision.
 
 ### PerfSense repo (`github.com/ssz2605/PerfSense-AI`)
 
@@ -227,15 +258,17 @@ PR → Clearly inert (docs/tests/i18n/assets)?
          No  → Run PerfSense → Compare to baseline → post comment
 ```
 
-- **Default = run; skip only provably inert classes** (`__tests__/**`, `*.test.js`,
-  `locales/`, docs, sounds, images, `.github/`).
+- **Default = run; skip only provably inert classes** (docs, `js/**/__tests__/**`,
+  `*.test.js`, `locales/`, sounds, images, `.github/` — everything outside the
+  `js css dist index.html` pathspec plus the explicit test-file exclusions).
 - Rationale: Music Blocks boots via RequireJS, which executes essentially every module
   in `js/` before the first Bootstrap measurement completes. So any file that ships and
   executes sits on a **measured path by construction** — almost any code change can
   plausibly affect a metric.
 - This makes the filter **fail-safe**: a brand-new runtime file is covered by default
   and cannot silently bypass PerfSense. No hand-maintained allowlist to rot.
-- Overrides: `perf:` label forces a run even on docs-only; `skip-perf` opts out.
+- **No label handling** (deliberate, per scope decision): no `perf:`/`skip-perf`
+  overrides exist. The trigger is purely the pathspec above.
   Changes to benchmark fixtures themselves trip the hash check and invalidate the
   comparison (never benchmarked against a stale baseline).
 - Trade-off explicitly accepted: occasional extra CI runs (false positives, ~4–6 min,
@@ -246,20 +279,30 @@ PR → Clearly inert (docs/tests/i18n/assets)?
 
 ## 6. Fork Validation Plan (before upstream)
 
-Four mock PRs on a fork, each exercising one behavior:
+Initial plumbing validation (4 mock PRs on the fork, all closed unmerged,
+`ssz2605/musicblocks`, 2026-08-30) proved the pipeline mechanics — **but against the
+pre-correction baseline and probes**. After the probe-correction commit (real
+`turtleList` resolution, `maxActionDepth` probe, `exportMIDI` timing bridge), the
+full 9-scenario matrix below is re-run one PR at a time against the corrected
+baseline:
 
-| Mock PR | Change | Expected Result | Result |
-| ------- | ------ | --------------- | ------ |
-| 1 | Docs-only | PerfSense skipped silently | ✅ PR #14: skipped, no comment |
-| 2 | Normal JS change | Runs, stays green | ✅ PR #15: PASS, green on all 6 fixtures |
-| 3 | Intentional loading regression (4 s main-thread stall in `loadNewBlocks`, `js/blocks.js`) | Regression detected on `projectLoadTime` | ✅ PR #16: `projectLoadTime` +54.4% / +54.6% flagged `:x:` on both loading fixtures |
-| 4 | Hot-path-only JS touch (`js/logo.js`) | Runs, metrics green; hot-path advisory note expected | ✅ Runs, green (PR #17) — advisory note **not implemented yet** (documented gap, optional polish) |
+| # | Mock PR | Change | Expected Result | Status |
+| - | ------- | ------ | --------------- | ------ |
+| A | Docs-only | Root `.md` / `README.md` | PerfSense skipped, no comment | re-validate on corrected baseline |
+| B | Neutral JS | Comment-only change in a runtime `js/` file | Runs, green, zero `:x:` flags | re-validate (was PR #15) |
+| C | Loading regression | 4 s main-thread stall in `loadNewBlocks` (`js/blocks.js`) | `projectLoadTime` flagged `:x:` | re-validate (was PR #16, +54.4%) |
+| D | Queue-ladder | Change that lifts per-turtle `queue.length` | `maxQueueDepth` responds | new |
+| E | Recursion | Change that lifts `queue + parentFlowQueue` depth | `maxActionDepth` responds | new |
+| F | Export delay | Added delay in MIDI export path | `exportMIDITime` responds | new |
+| G | Hot-path touch | Comment/hot-path-only change in `js/logo.js` | Runs, green; advisory note (optional polish) | re-validate (was PR #17, green) |
+| H | Identical repeat | Re-apply scenario B change verbatim | Green again, no threshold noise (stability) | new |
+| I | Test-only | Change under `js/__tests__/` or `*.test.js` | Skipped, no comment (new pathspec exclusion) | new |
 
-> Mock PRs #14-#17, all closed unmerged on `ssz2605/musicblocks` (2026-08-30). Locally
-> pre-verified before triggering CI: 4 s stall → single-fixture median +70% vs baseline
-> (runs=5, p=0.009). The earlier candidate injection point (disabling the
-> `_suppressRefresh` guard) was rejected because it made `projectLoadTime` *faster*
-> (4978 ms) — the guard is not actually exercised during measured project load.
+> Old mock PRs #14-#17 were locally pre-verified before their CI runs: 4 s stall →
+> single-fixture median +70% vs baseline (runs=5, p=0.009). The earlier candidate
+> injection point (disabling the `_suppressRefresh` guard) was rejected because it
+> made `projectLoadTime` *faster* (4978 ms) — the guard is not actually exercised
+> during measured project load.
 
 Flow per run:
 
@@ -269,7 +312,7 @@ PR → GitHub Actions → static serve → Music Blocks benchmark (6 fixtures ×
 → PR comment (table + evidence)
 ```
 
-If all four behave as expected, the same setup is ready for upstream.
+If all nine scenarios behave as expected, the same setup is ready for upstream.
 
 ---
 
@@ -297,9 +340,9 @@ calls absent from baseline → _suppressRefresh lifecycle broken (PR #7923 class
 
 | Tier | Metrics | Why |
 | ---- | ------- | --- |
-| **Warn-only initially** (need ≥10 CI runs to characterize variance before trust) | `callbackLatencyMean`, `callbackLatencyMax`, `cumulativeDrift`, `voiceOnsetError`, `memoryDelta`, `retainedHeap` | Audio and memory metrics are noise-sensitive in headless CI |
-| **Core (protected from day one)** | `bootstrapTotal`, `initTotal`, `projectLoadTime`, `maxQueueDepth`, `executionTime` (musical-tree, ascending-spiral), `blocksExecuted` | Stable, reproducible, sensitive to hot-path changes |
-| **Sanity / unverified** | `maxDepth` | Not reliable until action-recursion semantics are fixed; tracked but not gated |
+| **Warn-only (config sets `maxStatus: warning`)** | `maxActionDepth`, `callbackLatencyMean`, `callbackLatencyMax`, `cumulativeDrift`, `voiceOnsetError`, `memoryDelta`, `retainedHeap`, `heapAfterBoot` | `maxActionDepth` is a brand-new probe needing CI variance history before hard-gating; audio and memory metrics are noise-sensitive in headless CI |
+| **Core (protected from day one)** | `bootstrapTotal`, `initTotal`, `projectLoadTime`, `saveTime`, `exportMIDITime`, `maxQueueDepth`, `executionTime` (musical-tree, ascending-spiral), `blocksExecuted` | Stable, reproducible, sensitive to hot-path changes |
+| **Sanity / unverified** | `maxDepth` | Tracks only synchronous JS call nesting, not program recursion — see §2 Notes; tracked but not gated |
 
 **Warn-only forever (do not hard-gate):** all audio-derived and memory metrics — CI
 cannot reliably measure them, and PerfSense never blocks merges anyway.
@@ -330,15 +373,36 @@ first ~10 CI baseline runs on the pinned runner provide real variance data.
 ## 10. Status
 
 - Design and metric selection complete and verified against the repository.
-- Framework (CLI, driver, statistics, evidence, correlation, reporting, AI) already
+- Framework (CLI, driver, statistics, evidence, correlation, reporting) already
   implemented in PerfSense-AI.
-- Baseline captured on the upstream-pinned runner (6 fixtures × 5 runs), PR #13,
-  `baseline.json` on `origin/master`.
-- Fork validation complete (2026-08-30): all four mock PRs (#14-#17) behaved as
-  documented in Section 6 — docs-skip, green PASS, REGRESSION flagged on an
-  intentional loading regression, hot-path green. All closed unmerged.
+- **Probe corrections merged on the fork (2026-09-12, commit `d1ad94b`):** real
+  `turtleList` resolution fixes `maxQueueDepth` (was stuck at 0 on real runs); new
+  `maxActionDepth` probe (per-turtle queue + parentFlowQueue depth); `exportMIDI`
+  timing bridge so `exportMIDITime` measures the real export boundary; Phase-1
+  sample-denominator fix; `PERFSENSE_REF` pinned to PerfSense-AI `e3fe235`
+  (driver corrections: bridge-gated fixture drop, post-drop verification,
+  playback proof, headless autoplay, `maxQ` reset).
+- Baseline re-captured on the corrected runner (6 fixtures × 5 runs, ubuntu + pinned
+  Chrome) — run 34703500794 — but that capture is **invalid for play/load metrics**:
+  fixtures never opened (the file was dropped ~0.4 s in, before the `#myOpenFile`
+  change handler exists at `activity.init.end`), so playback never started
+  (executionTime ≈ the 4 s grace timeout on every page, `blocksExecuted = 15`,
+  `cumulativeDrift = 0`). The baseline refresh PR therefore stays unmerged; the
+  driver corrections below close the seams and the baseline is re-captured after
+  they land.
+- **Driver correction round (2026-09-12):** PerfSense-AI's ready-gate now waits for
+  the real bridge (`mb.ui && mb.blocks`) on app pages before dropping the fixture
+  (the `booted` escape is kept only for static mocks); post-drop verification
+  requires `perfMarks.openStart` (hard-fails instead of reporting a phantom load);
+  playback is proven via `isRunning()` within 20 s (null sample otherwise, instead
+  of silently eating the grace timeout); `chromium.launch` passes
+  `--autoplay-policy=no-user-gesture-required` so Tone.js scheduling fires headless;
+  `maxQ` resets between the warm-up and measured runs; benchmark job timeout raised
+  to 60 min to fit real playbacks (musical-tree ≈ 22.5 s, crabcanon ≈ 48 s).
+- **Re-validation in progress:** the full 9-scenario mock matrix (A–I, §6) is run one
+  PR at a time against the corrected baseline. Each scenario must behave as documented
+  before the next is opened; nothing ships upstream until all nine pass.
 - Known gaps to polish later (non-blocking): hot-path advisory note for hot-path-only
-  changes; `cumulativeDrift`/`maxQueueDepth` report rows render sign artifacts when the
-  baseline value is 0.
-- Next step: offer upstream to `sugarlabs/musicblocks` (LICENSE/AGPL headers first,
-  then a PR carrying the separated repo split from Section 4).
+  changes (scenario G).
+- Next step (gated on A–I passing): offer upstream to `sugarlabs/musicblocks`
+  (LICENSE/AGPL headers first, then a PR carrying the repo split from Section 4).

@@ -4,9 +4,11 @@ env:
     # Immutable pin: this workflow always builds and runs this exact
     # revision of PerfSense-AI. Verify the SHA is still current before
     # changing it (tags do not exist on the repo yet).
-    # 09eab18 = probe corrections: real turtleList resolution (maxQueueDepth),
-    #           new maxActionDepth probe, runtime fallback read.
-    PERFSENSE_REF: 09eab18bf796e426fada2c04d9a29fdc58f34b56
+    # e3fe235 = driver corrections: ready-gate on the real bridge (fixture is
+    #           never dropped before the #myOpenFile handler exists), post-drop
+    #           verification via perfMarks.openStart, playback proof
+    #           (isRunning within 20s), headless autoplay flag, maxQ reset.
+    PERFSENSE_REF: e3fe235794396d885b88b0156380a99f2067e4fa
 
 # Runs on PRs that touch runtime code. Posts a single performance comparison
 # comment. Comment-only — never fails checks or blocks merges.
@@ -46,7 +48,7 @@ jobs:
     benchmark:
         name: Performance Comparison
         runs-on: ubuntu-latest
-        timeout-minutes: 30
+        timeout-minutes: 60
         steps:
             - name: Checkout PR code
               uses: actions/checkout@v4

@@ -2,9 +2,10 @@ name: PerfSense Baseline Refresh
 
 env:
     # Immutable pin: same revision of PerfSense-AI used by perfsense.yml.
-    # 09eab18 = probe corrections: real turtleList resolution (maxQueueDepth),
-    #           new maxActionDepth probe, runtime fallback read.
-    PERFSENSE_REF: 09eab18bf796e426fada2c04d9a29fdc58f34b56
+    # e3fe235 = driver corrections: ready-gate on the real bridge, post-drop
+    #           verification via perfMarks.openStart, playback proof, headless
+    #           autoplay flag, maxQ reset.
+    PERFSENSE_REF: e3fe235794396d885b88b0156380a99f2067e4fa
 
 # Regenerates baseline.json from master on a weekly schedule.
 # Opens a "chore: refresh perf baseline" PR for human review.
@@ -40,7 +41,7 @@ jobs:
     rebaseline:
         name: Regenerate Baseline
         runs-on: ubuntu-latest
-        timeout-minutes: 30
+        timeout-minutes: 60
         steps:
             - name: Checkout master
               uses: actions/checkout@v4
