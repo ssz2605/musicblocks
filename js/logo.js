@@ -1887,6 +1887,9 @@ class Logo {
      * @returns {void}
      */
     runFromBlockNow(logo, turtle, blk, isflow, receivedArg, queueStart) {
+        // Neutral-change marker for the PerfSense mock-PR matrix (scenario B):
+        // comments only, no behavior change. Expected verdict: the benchmark
+        // runs and the comparison against master baseline flags nothing.
         const tracker = getPerformanceTracker();
         const profilingEnabled =
             tracker && typeof tracker.isEnabled === "function" && tracker.isEnabled();
