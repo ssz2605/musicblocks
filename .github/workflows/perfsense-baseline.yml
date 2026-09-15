@@ -2,11 +2,9 @@ name: PerfSense Baseline Refresh
 
 env:
     # Immutable pin: same revision of PerfSense-AI used by perfsense.yml.
-    # e3fe235 = driver corrections: ready-gate on the real bridge, post-drop
-    #           verification via perfMarks.openStart, playback proof, headless
-    #           autoplay flag, maxQ reset.
-    # 0e51f21 = reporter fix: summary table rows labeled with the fixture page.
-    PERFSENSE_REF: 0e51f218522e50fac2931150bcccc8d6419a9fff
+    # 802ab21 = Benchmark Matrix contract enforcement (driver + CLI filters),
+    #           scheduleLagMean/Max metrics, maxActionDepth removal.
+    PERFSENSE_REF: 802ab217ae54b5c46f530b5102caea34baf27c2a
 
 # Regenerates baseline.json from master on a weekly schedule.
 # Opens a "chore: refresh perf baseline" PR for human review.

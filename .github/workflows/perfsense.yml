@@ -4,12 +4,11 @@ env:
     # Immutable pin: this workflow always builds and runs this exact
     # revision of PerfSense-AI. Verify the SHA is still current before
     # changing it (tags do not exist on the repo yet).
-    # e3fe235 = driver corrections: ready-gate on the real bridge (fixture is
-    #           never dropped before the #myOpenFile handler exists), post-drop
-    #           verification via perfMarks.openStart, playback proof
-    #           (isRunning within 20s), headless autoplay flag, maxQ reset.
-    # 0e51f21 = reporter fix: summary table rows labeled with the fixture page.
-    PERFSENSE_REF: 0e51f218522e50fac2931150bcccc8d6419a9fff
+    # 802ab21 = Benchmark Matrix contract enforcement (driver + CLI filters:
+    #           collection and baseline-save keep only matrix-approved
+    #           fixture/metric pairs), scheduleLagMean/Max metrics at the
+    #           transport seam, maxActionDepth removed, compact report UI.
+    PERFSENSE_REF: 802ab217ae54b5c46f530b5102caea34baf27c2a
 
 # Runs on PRs that touch runtime code. Posts a single performance comparison
 # comment. Comment-only — never fails checks or blocks merges.
