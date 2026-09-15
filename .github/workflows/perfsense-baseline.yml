@@ -2,9 +2,10 @@ name: PerfSense Baseline Refresh
 
 env:
     # Immutable pin: same revision of PerfSense-AI used by perfsense.yml.
-    # 802ab21 = Benchmark Matrix contract enforcement (driver + CLI filters),
-    #           scheduleLagMean/Max metrics, maxActionDepth removal.
-    PERFSENSE_REF: 802ab217ae54b5c46f530b5102caea34baf27c2a
+    # 7f5d6b4 = Benchmark Matrix contract (802ab21 base): Rainbow contract
+    #           load/save/export incl. saveAsLilypondTime (LilyPond export),
+    #           musical-tree owns memoryDelta/retainedHeap.
+    PERFSENSE_REF: 7f5d6b4c49c051d57381fd3a8ae6fab153c53283
 
 # Regenerates baseline.json from master on a weekly schedule.
 # Opens a "chore: refresh perf baseline" PR for human review.

@@ -8,7 +8,9 @@ env:
     #           collection and baseline-save keep only matrix-approved
     #           fixture/metric pairs), scheduleLagMean/Max metrics at the
     #           transport seam, maxActionDepth removed, compact report UI.
-    PERFSENSE_REF: 802ab217ae54b5c46f530b5102caea34baf27c2a
+    # 7f5d6b4 = Rainbow contract adds saveAsLilypondTime (LilyPond export,
+    #           mirroring exportMIDITime); musical-tree owns memory metrics.
+    PERFSENSE_REF: 7f5d6b4c49c051d57381fd3a8ae6fab153c53283
 
 # Runs on PRs that touch runtime code. Posts a single performance comparison
 # comment. Comment-only — never fails checks or blocks merges.

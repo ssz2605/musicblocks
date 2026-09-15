@@ -34,7 +34,7 @@ performance concern.
 | Project | Purpose | Metrics |
 | ------- | ------- | ------- |
 | **Empty** | Isolates app startup cost | `bootstrapTotal`, `initTotal`, `heapAfterBoot` |
-| **Rainbow Connection** (5.7k blocks, 1.5MB, largest in repo) | Project loading, save/export, memory; protects PR #7923 load-suppression optimization | `projectLoadTime`, `saveTime`, `exportMIDITime`, `memoryDelta`, `retainedHeap` |
+| **Rainbow Connection** (5.7k blocks, 1.5MB, largest in repo) | Project loading, save/export; protects PR #7923 load-suppression optimization | `projectLoadTime`, `saveTime`, `exportMIDITime`, `saveAsLilypondTime` |
 | **Frère Jacques** (4-voice round) | Tone.js/Transport scheduling precision; protects PR #7703 scheduler migration | `callbackLatencyMean`, `callbackLatencyMax`, `cumulativeDrift`, `voiceOnsetError` |
 | **musical-tree** (recursive fractal drawing) | Recursive/action-heavy execution, queue & memory stress | `maxQueueDepth`, `maxActionDepth`, `executionTime`, `memoryDelta`, `retainedHeap`, `maxDepth` |
 | **ascending-notes-color-spiral** (46 blocks, completes <1s) | Interpreter throughput / block execution — cheap full-run smoke signal | `executionTime`, `maxQueueDepth`, `maxActionDepth`, `maxDepth`, `blocksExecuted` |
@@ -73,7 +73,7 @@ performance concern.
 | ------------ | ---------------------- |
 | `bootstrapTotal`, `initTotal` | `window.__mbPerf.measures` via `?mbPerf=1` (`js/loader.js`, `js/activity.js`) |
 | `executionTime`, `maxDepth`, `memoryDelta` | `window.performanceTracker.getStats()` via `?performance=true` (`js/utils/performanceTracker.js`) |
-| `projectLoadTime`, `saveTime`, `exportMIDITime` | Real UI interaction timing (`setInputFiles('#myOpenFile')` → poll-ready; Save/export menus) |
+| `projectLoadTime`, `saveTime`, `exportMIDITime`, `saveAsLilypondTime` | Real UI interaction timing (`setInputFiles('#myOpenFile')` → poll-ready; Save/export menus; MIDI + LilyPond export bridges) |
 | `callbackLatency*`, `cumulativeDrift`, `voiceOnsetError` | Page-level injector wrapping the `synth.transport.schedule` seam (`js/logo.js:1781`) — the exact method PR #7703 used |
 | `maxQueueDepth`, `blocksExecuted` | Page-level injector sampling `tur.queue.length` / counting `runFromBlockNow` |
 | `maxActionDepth` | Page-level injector sampling per-turtle `queue.length + parentFlowQueue.length` (same sampler as `maxQueueDepth`) |

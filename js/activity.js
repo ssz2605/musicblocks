@@ -2910,6 +2910,40 @@ class Activity {
                                 }
                             };
                             save.saveMIDI(this);
+                        }),
+                    saveAsLilypond: () =>
+                        new Promise(resolve => {
+                            // saveLYFile() exports asynchronously: when there is
+                            // no buffered notation it runs the whole program
+                            // (runLogoCommands) with music/turtle output suppressed,
+                            // and only then invokes afterSaveLilypond() to generate
+                            // the .ly data. afterSaveLilypondLY() issues the
+                            // download as its last synchronous step, so hooking
+                            // save.download (like exportMIDI) stops the clock only
+                            // after the generate-and-download work completes.
+                            const save = this.save;
+                            const origDownload = save.download.bind(save);
+                            save.download = (extension, dataurl, defaultfilename) => {
+                                save.download = origDownload;
+                                try {
+                                    origDownload(extension, dataurl, defaultfilename);
+                                } catch (e) {
+                                    // Measure the timing anyway; the run continues.
+                                }
+                                resolve();
+                            };
+                            try {
+                                save.saveLilypond(this);
+                                const submit = docById("submitLilypond");
+                                if (submit && typeof submit.click === "function") {
+                                    submit.click();
+                                } else {
+                                    save.saveLYFile(false);
+                                }
+                            } catch (e) {
+                                save.download = origDownload;
+                                resolve();
+                            }
                         })
                 };
                 mbBridge.perfMarks = {
