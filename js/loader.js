@@ -483,6 +483,9 @@ requirejs(["i18next", "i18nextHttpBackend"], function (i18next, i18nextHttpBacke
                 "loader.i18n.ready"
             );
 
+            // Mock load-time deferral (benchmarking)
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
             if (typeof M !== "undefined" && M.AutoInit) {
                 M.AutoInit();
             }
