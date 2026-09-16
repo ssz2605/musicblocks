@@ -1,0 +1,147 @@
+name: PerfSense Layer C Spike (real audio clock)
+
+env:
+    # Pinned at the same revision as the official workflows: the driver must
+    # support PERFSENSE_HEADED for the headed leg of this spike.
+    PERFSENSE_REF: 53ae5d20f30e0a13739d76c36f5adc148f8e8f07
+
+# Runs the Frère Jacques transport-seam benchmark twice on the same runner:
+#   1. headless (control)  — synthesized audio clock, drift collapses to ~0
+#   2. headed under Xvfb + a real PulseAudio null-sink clock
+# The two output distributions show exactly what the synthetic clock hides,
+# so the FJ audio metrics can be reviewed for promotion to verified.
+#
+# Manual trigger only. Never part of the gating path. The official baseline
+# stays headless until the spike results are reviewed.
+#
+# CLI interface (from PerfSense-AI):
+#   benchmark --config perfsense-layerc.config.json --out layerc-headless.json
+#   PERFSENSE_HEADED=1 benchmark --config ... --out layerc-results.json
+
+on:
+    workflow_dispatch:
+
+concurrency:
+    group: perfsense-layerc-spike
+    cancel-in-progress: false
+
+permissions:
+    contents: read
+
+jobs:
+    spike:
+        name: Real-clock audio capture
+        runs-on: ubuntu-latest
+        timeout-minutes: 60
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v5
+              with:
+                  node-version: "20"
+
+            - name: Setup pnpm
+              uses: pnpm/action-setup@v4
+              with:
+                  version: 10
+
+            - name: Install audio + display stack
+              run: |
+                  sudo apt-get update
+                  sudo apt-get install -y --no-install-recommends pulseaudio pulseaudio-utils xvfb
+
+            - name: Start PulseAudio on a real (null-sink) clock
+              run: |
+                  # PulseAudio may already be running via dbus autospawn; the
+                  # daemonize call is best-effort, the null sink is the point.
+                  pulseaudio --exit-idle-time=-1 --daemonize=yes || true
+                  pactl load-module module-null-sink sink_name=bench sink_properties=device.description=BenchNull
+                  pactl set-default-sink bench
+                  pactl info
+
+            - name: Clone PerfSense
+              run: |
+                  git clone https://github.com/ssz2605/PerfSense-AI.git /tmp/perfsense
+                  git -C /tmp/perfsense checkout --quiet "$PERFSENSE_REF"
+                  git -C /tmp/perfsense log -1 --format="PerfSense pinned to %H (%s)"
+
+            - name: Build PerfSense
+              working-directory: /tmp/perfsense
+              run: pnpm install --frozen-lockfile && pnpm build
+
+            - name: Install Playwright Chromium with system deps
+              working-directory: /tmp/perfsense
+              run: pnpm --filter @perfsense/driver-playwright exec playwright install --with-deps chromium
+
+            - name: Start Music Blocks server
+              run: |
+                  node perfsense-server.cjs . 8787 &
+                  for i in 1 2 3 4 5; do
+                    curl -sf http://127.0.0.1:8787/index.html -o /dev/null && break
+                    sleep 2
+                  done
+                  curl -sf http://127.0.0.1:8787/index.html -o /dev/null && echo "Server ready" || { echo "Server failed"; exit 1; }
+
+            - name: Control leg — headless (synthetic clock)
+              run: |
+                  node /tmp/perfsense/packages/cli/dist/index.js benchmark \
+                    --config perfsense-layerc.config.json \
+                    --out layerc-headless.json
+
+            - name: Spike leg — headed Chromium on the PulseAudio clock
+              run: |
+                  xvfb-run -a -s "-screen 0 1280x1024x24" \
+                    env PERFSENSE_HEADED=1 \
+                    node /tmp/perfsense/packages/cli/dist/index.js benchmark \
+                    --config perfsense-layerc.config.json \
+                    --out layerc-results.json
+
+            - name: Summarize both legs
+              run: |
+                  node -e "
+                    const fs = require('fs');
+                    function summarize(path) {
+                      const r = require('./' + path);
+                      const page = r[0] || {};
+                      const out = {};
+                      for (const run of page.runs || []) {
+                        for (const [k, v] of Object.entries(run.metrics || {})) {
+                          (out[k] = out[k] || []).push(v);
+                        }
+                      }
+                      const med = (a) => {
+                        a = a.filter((v) => typeof v === 'number' && Number.isFinite(v));
+                        if (!a.length) return 'n/a';
+                        a.sort((x, y) => x - y);
+                        const m = Math.floor(a.length / 2);
+                        return (a.length % 2 ? a[m] : (a[m - 1] + a[m]) / 2).toFixed(4);
+                      };
+                      const res = {};
+                      for (const k of Object.keys(out)) res[k] = { median: med(out[k]), values: out[k] };
+                      return res;
+                    }
+                    const headless = summarize('layerc-headless.json');
+                    const headed = summarize('layerc-results.json');
+                    let md = '## Layer C spike: real vs synthetic audio clock\\n\\n';
+                    md += '| Metric | headless median | headed (real) median |\\n|---|---|---|\\n';
+                    for (const k of Object.keys(headed)) {
+                      md += '| ' + k + ' | ' + (headless[k] ? headless[k].median : 'n/a') + ' | ' + headed[k].median + ' |\\n';
+                    }
+                    md += '\\n**Runner:** ubuntu-latest · pulseaudio null-sink · 5 runs each\\n';
+                    fs.writeFileSync('layerc-summary.md', md);
+                    console.log(fs.readFileSync('layerc-summary.md', 'utf8'));
+                  "
+
+            - name: Upload spike results
+              uses: actions/upload-artifact@v4
+              with:
+                  name: layerc-spike
+                  path: |
+                      layerc-results.json
+                      layerc-headless.json
+                      layerc-summary.md
+                  if-no-files-found: error

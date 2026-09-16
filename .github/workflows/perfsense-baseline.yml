@@ -2,10 +2,11 @@ name: PerfSense Baseline Refresh
 
 env:
     # Immutable pin: same revision of PerfSense-AI used by perfsense.yml.
-    # 7f5d6b4 = Benchmark Matrix contract (802ab21 base): Rainbow contract
-    #           load/save/export incl. saveAsLilypondTime (LilyPond export),
-    #           musical-tree owns memoryDelta/retainedHeap.
-    PERFSENSE_REF: 7f5d6b4c49c051d57381fd3a8ae6fab153c53283
+    # 53ae5d2 = recursion + memory + seam gate:
+    #           MaxLogicalDepth verified metric (musical-tree, ascending),
+    #           GC-forced memory reads, scheduleCount + seam tripwire in
+    #           check, PERFSENSE_HEADED switch for the Layer C spike.
+    PERFSENSE_REF: 53ae5d20f30e0a13739d76c36f5adc148f8e8f07
 
 # Regenerates baseline.json from master on a weekly schedule.
 # Opens a "chore: refresh perf baseline" PR for human review.
@@ -112,7 +113,7 @@ jobs:
                     bl.runner = bl.runner || {};
                     bl.runner.os = 'ubuntu-latest';
                     bl.runner.chromeVersion = '$CHROME_VERSION';
-                    bl.runner.nodeVersion = '20';
+                    bl.runner.nodeVersion = process.version.replace(/^v/, '');
                     bl.statistics = {
                       flagRule: 'MannWhitneyU p<0.05 AND medianDelta>=threshold AND cliffsDelta>=0.147',
                       minRuns: 5

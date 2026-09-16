@@ -4,13 +4,11 @@ env:
     # Immutable pin: this workflow always builds and runs this exact
     # revision of PerfSense-AI. Verify the SHA is still current before
     # changing it (tags do not exist on the repo yet).
-    # 802ab21 = Benchmark Matrix contract enforcement (driver + CLI filters:
-    #           collection and baseline-save keep only matrix-approved
-    #           fixture/metric pairs), scheduleLagMean/Max metrics at the
-    #           transport seam, maxActionDepth removed, compact report UI.
-    # 7f5d6b4 = Rainbow contract adds saveAsLilypondTime (LilyPond export,
-    #           mirroring exportMIDITime); musical-tree owns memory metrics.
-    PERFSENSE_REF: 7f5d6b4c49c051d57381fd3a8ae6fab153c53283
+    # 53ae5d2 = recursion + memory + seam gate: MaxLogicalDepth verified
+    #           metric (musical-tree, ascending), GC-forced memory reads
+    #           (real memoryDelta/retainedHeap), scheduleCount + Layer A
+    #           seam tripwire in check, PERFSENSE_HEADED switch (Layer C).
+    PERFSENSE_REF: 53ae5d20f30e0a13739d76c36f5adc148f8e8f07
 
 # Runs on PRs that touch runtime code. Posts a single performance comparison
 # comment. Comment-only — never fails checks or blocks merges.

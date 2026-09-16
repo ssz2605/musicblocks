@@ -40,10 +40,12 @@
         "maxQueueDepth",
         "blocksExecuted",
         "maxDepth",
+        "maxLogicalDepth",
         "memoryDelta",
         "retainedHeap",
         "scheduleLagMean",
-        "scheduleLagMax"
+        "scheduleLagMax",
+        "scheduleCount"
     ],
     "thresholds": {
         "bootstrapTotal": { "warning": 10, "fail": 25 },
@@ -61,9 +63,11 @@
         "scheduleLagMean": { "warning": 30, "fail": 60 },
         "scheduleLagMax": { "warning": 30, "fail": 60 },
         "maxDepth": { "warning": 10, "fail": 10000, "maxStatus": "warning" },
-        "memoryDelta": { "warning": 15, "fail": 10000, "maxStatus": "warning" },
-        "retainedHeap": { "warning": 15, "fail": 10000, "maxStatus": "warning" },
+        "maxLogicalDepth": { "warning": 25, "fail": 50 },
+        "memoryDelta": { "warning": 15, "fail": 10000 },
+        "retainedHeap": { "warning": 15, "fail": 10000 },
         "heapAfterBoot": { "warning": 15, "fail": 10000, "maxStatus": "warning" },
-        "cumulativeDrift": { "warning": 30, "fail": 10000, "maxStatus": "warning" }
+        "cumulativeDrift": { "warning": 30, "fail": 10000, "maxStatus": "warning" },
+        "scheduleCount": { "warning": 20, "fail": 50 }
     }
 }
