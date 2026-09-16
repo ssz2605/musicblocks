@@ -1,0 +1,27 @@
+{
+    "pages": [
+        "http://127.0.0.1:8787/index.html?mbPerf=1&perfsenseProject=Frere-Jacques.html"
+    ],
+    "runs": 5,
+    "runTimeoutMs": 300000,
+    "scenarios": {
+        "Frere-Jacques.html": ["openProject", "playToCompletion"]
+    },
+    "fixtures": {
+        "Frere-Jacques.html": "examples/Frere-Jacques.html"
+    },
+    "metrics": [
+        "callbackLatencyMean",
+        "callbackLatencyMax",
+        "cumulativeDrift",
+        "voiceOnsetError",
+        "scheduleCount"
+    ],
+    "thresholds": {
+        "callbackLatencyMean": { "warning": 30, "fail": 60 },
+        "callbackLatencyMax": { "warning": 30, "fail": 60 },
+        "cumulativeDrift": { "warning": 30, "fail": 10000, "maxStatus": "warning" },
+        "voiceOnsetError": { "warning": 30, "fail": 60 },
+        "scheduleCount": { "warning": 20, "fail": 50 }
+    }
+}

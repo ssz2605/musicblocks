@@ -35,28 +35,32 @@ performance concern.
 | ------- | ------- | ------- |
 | **Empty** | Isolates app startup cost | `bootstrapTotal`, `initTotal`, `heapAfterBoot` |
 | **Rainbow Connection** (5.7k blocks, 1.5MB, largest in repo) | Project loading, save/export; protects PR #7923 load-suppression optimization | `projectLoadTime`, `saveTime`, `exportMIDITime`, `saveAsLilypondTime` |
-| **Frère Jacques** (4-voice round) | Tone.js/Transport scheduling precision; protects PR #7703 scheduler migration | `callbackLatencyMean`, `callbackLatencyMax`, `cumulativeDrift`, `voiceOnsetError` |
-| **musical-tree** (recursive fractal drawing) | Recursive/action-heavy execution, queue & memory stress | `maxQueueDepth`, `maxActionDepth`, `executionTime`, `memoryDelta`, `retainedHeap`, `maxDepth` |
-| **ascending-notes-color-spiral** (46 blocks, completes <1s) | Interpreter throughput / block execution — cheap full-run smoke signal | `executionTime`, `maxQueueDepth`, `maxActionDepth`, `maxDepth`, `blocksExecuted` |
+| **Frère Jacques** (4-voice round) | Tone.js/Transport scheduling precision; protects PR #7703 scheduler migration | `callbackLatencyMean`, `callbackLatencyMax`, `cumulativeDrift`, `voiceOnsetError`, `scheduleCount` |
+| **musical-tree** (recursive fractal drawing) | Recursive/action-heavy execution, queue & memory stress | `maxQueueDepth`, `executionTime`, `memoryDelta`, `retainedHeap`, `maxDepth` (unverified), `maxLogicalDepth` |
+| **ascending-notes-color-spiral** (46 blocks, completes <1s) | Interpreter throughput / block execution — cheap full-run smoke signal | `executionTime`, `maxDepth` (unverified), `blocksExecuted`, `maxLogicalDepth` |
 | **crabcanon-plot** (2 staggered turtles) | Concurrent two-voice scheduling | `callbackLatencyMean`, `callbackLatencyMax`, `cumulativeDrift`, `voiceOnsetError` |
 
 ### Notes
 
 - **`maxDepth`** is **sanity-tracked only**, not a regression signal. The instrument
   tracks synchronous JS call nesting of `runFromBlockNow`; it is not reliable for
-  program recursion depth. Program-level nesting is covered by `maxActionDepth`
+  program recursion depth. Program-level nesting is covered by `maxLogicalDepth`
   below instead.
-- **`maxActionDepth`** (max per-turtle `queue.length + parentFlowQueue.length` during
-  a run, sampled on every executed block) is the **real recursion/scheduling-pressure
-  signal**. musical-tree's recursive action calls explode the depth while linear songs
-  stay flat. It catches runaway/infinite action loops early and is what a
-  recursion-regression PR moves (validated in §6 scenario E).
+- **`maxLogicalDepth`** (max per-turtle `queue.length + parentFlowQueue.length`
+  during a run, measured exactly at every executed block via the engine's own
+  `ithTurtle` resolution) is the **real recursion/scheduling-pressure signal**.
+  The engine executes flow recursion iteratively, so this depth is exact —
+  musical-tree's recursive action calls reach ≈254 while linear songs stay flat.
+  It catches runaway/infinite action loops early and is what a recursion-regression
+  PR moves. (Local probe validated; CI variance characterized by the baseline
+  refresh that carries this metric.)
 - **`maxQueueDepth`** (max per-turtle `queue.length` across turtles during a run,
   sampled per executed block) tracks raw queue accumulation, e.g. a queue-ladder
   regression (validated in §6 scenario D). Both samplers read the real turtle array
   (`window.__mb.turtles.turtleList`); previously they looked at a legacy `.turtles`
   property that does not exist on the container, so `maxQueueDepth` read 0 on real
-  runs — fixed in the probe-correction commit.
+  runs — fixed in the probe-correction commit. The queue samplers are sampled on a
+  25 ms interval; `maxLogicalDepth` is captured per executed block.
 - **`blocksExecuted`** sanity-checks `executionTime`: a stable block count with rising
   time is a genuine slowdown; a changing block count means the workload itself changed.
 - **Rejected fixtures** (with concrete reasons): chopsticks, animated-circles, and
@@ -74,10 +78,10 @@ performance concern.
 | `bootstrapTotal`, `initTotal` | `window.__mbPerf.measures` via `?mbPerf=1` (`js/loader.js`, `js/activity.js`) |
 | `executionTime`, `maxDepth`, `memoryDelta` | `window.performanceTracker.getStats()` via `?performance=true` (`js/utils/performanceTracker.js`) |
 | `projectLoadTime`, `saveTime`, `exportMIDITime`, `saveAsLilypondTime` | Real UI interaction timing (`setInputFiles('#myOpenFile')` → poll-ready; Save/export menus; MIDI + LilyPond export bridges) |
-| `callbackLatency*`, `cumulativeDrift`, `voiceOnsetError` | Page-level injector wrapping the `synth.transport.schedule` seam (`js/logo.js:1781`) — the exact method PR #7703 used |
+| `callbackLatency*`, `cumulativeDrift`, `voiceOnsetError`, `scheduleCount` | Page-level injector wrapping the `synth.transport.schedule` seam (`js/logo.js:1781`) — the exact method PR #7703 used |
 | `maxQueueDepth`, `blocksExecuted` | Page-level injector sampling `tur.queue.length` / counting `runFromBlockNow` |
-| `maxActionDepth` | Page-level injector sampling per-turtle `queue.length + parentFlowQueue.length` (same sampler as `maxQueueDepth`) |
-| `heapAfterBoot`, `retainedHeap` | CDP precise memory + double-run retained-heap sampling (leak guard) |
+| `maxLogicalDepth` | Page-level injector sampling per-turtle `queue.length + parentFlowQueue.length` at every `runFromBlockNow` entry (engine's own `ithTurtle` resolution) — exact program recursion depth |
+| `heapAfterBoot`, `retainedHeap` | GC-forced heap reads: Chromium launched with `--js-flags=--expose-gc` and `window.gc()` runs before each read, so `memoryDelta`/`retainedHeap` reflect real retained bytes (headless unforced reads returned stale zeros) |
 
 ---
 
@@ -191,13 +195,15 @@ musicblocks/
   },
   "metrics": [
     "bootstrapTotal", "initTotal", "heapAfterBoot", "projectLoadTime",
-    "saveTime", "exportMIDITime", "callbackLatencyMean", "callbackLatencyMax",
-    "cumulativeDrift", "voiceOnsetError", "executionTime", "maxQueueDepth",
-    "maxActionDepth", "blocksExecuted", "maxDepth", "memoryDelta", "retainedHeap"
+    "saveTime", "exportMIDITime", "saveAsLilypondTime", "callbackLatencyMean",
+    "callbackLatencyMax", "cumulativeDrift", "voiceOnsetError", "executionTime",
+    "maxQueueDepth", "maxLogicalDepth", "blocksExecuted", "maxDepth",
+    "scheduleCount", "memoryDelta", "retainedHeap"
   ],
   "thresholds": {
     "projectLoadTime": { "warning": 10, "fail": 25 },
-    "maxActionDepth": { "warning": 10, "fail": 10000, "maxStatus": "warning" },
+    "maxDepth": { "warning": 10, "fail": 10000, "maxStatus": "warning" },
+    "maxLogicalDepth": { "warning": 25, "fail": 50 },
     ...
   }
 }
@@ -292,7 +298,7 @@ baseline:
 | B | Neutral JS | Comment-only change in a runtime `js/` file | Runs, green, zero `:x:` flags | re-validate (was PR #15) |
 | C | Loading regression | 4 s main-thread stall in `loadNewBlocks` (`js/blocks.js`) | `projectLoadTime` flagged `:x:` | re-validate (was PR #16, +54.4%) |
 | D | Queue-ladder | Change that lifts per-turtle `queue.length` | `maxQueueDepth` responds | new |
-| E | Recursion | Change that lifts `queue + parentFlowQueue` depth | `maxActionDepth` responds | new |
+| E | Recursion | Change that lifts `queue + parentFlowQueue` depth | `maxLogicalDepth` responds | new |
 | F | Export delay | Added delay in MIDI export path | `exportMIDITime` responds | new |
 | G | Hot-path touch | Comment/hot-path-only change in `js/logo.js` | Runs, green; advisory note (optional polish) | re-validate (was PR #17, green) |
 | H | Identical repeat | Re-apply scenario B change verbatim | Green again, no threshold noise (stability) | new |
@@ -340,19 +346,29 @@ calls absent from baseline → _suppressRefresh lifecycle broken (PR #7923 class
 
 | Tier | Metrics | Why |
 | ---- | ------- | --- |
-| **Warn-only (config sets `maxStatus: warning`)** | `maxActionDepth`, `callbackLatencyMean`, `callbackLatencyMax`, `cumulativeDrift`, `voiceOnsetError`, `memoryDelta`, `retainedHeap`, `heapAfterBoot` | `maxActionDepth` is a brand-new probe needing CI variance history before hard-gating; audio and memory metrics are noise-sensitive in headless CI |
-| **Core (protected from day one)** | `bootstrapTotal`, `initTotal`, `projectLoadTime`, `saveTime`, `exportMIDITime`, `maxQueueDepth`, `executionTime` (musical-tree, ascending-spiral), `blocksExecuted` | Stable, reproducible, sensitive to hot-path changes |
+| **Warn-only (config sets `maxStatus: warning`)** | `callbackLatencyMean`, `callbackLatencyMax`, `cumulativeDrift`, `voiceOnsetError`, `heapAfterBoot` | Audio metrics await the Layer C real-clock spike (headless synthetic clock means current drift/latency values are environment noise); `heapAfterBoot` stays warn-only as a boot-time smoke signal |
+| **Core (protected from day one)** | `bootstrapTotal`, `initTotal`, `projectLoadTime`, `saveTime`, `exportMIDITime`, `maxQueueDepth`, `executionTime` (musical-tree, ascending-spiral), `blocksExecuted`, `scheduleCount` | Stable, reproducible, sensitive to hot-path changes; `scheduleCount` doubles as the live seam-health signal behind the Layer A tripwire |
+| **Memory (verified after GC fix)** | `memoryDelta`, `retainedHeap` | Real since Chromium launches with `--expose-gc` and reads are GC-forced; still sensitive to CI noise, watch the 15% thresholds |
 | **Sanity / unverified** | `maxDepth` | Tracks only synchronous JS call nesting, not program recursion — see §2 Notes; tracked but not gated |
 
-**Warn-only forever (do not hard-gate):** all audio-derived and memory metrics — CI
-cannot reliably measure them, and PerfSense never blocks merges anyway.
+**Warn-only until reviewed:** all audio-derived metrics — headless CI runs on a
+synthesized audio clock, so their values cannot speak for real playback. The Layer C
+spike (`perfsense-layerc-spike.yml`) measures the transport seam on a real
+PulseAudio clock; if the spike shows stable real-clock variance, the audio metrics
+are promoted to verified and gated.
 
 **Do NOT baseline:** raw `executionTime` on song-length pieces (Rainbow Connection,
 Frère Jacques) — it includes note waits and measures tempo, not interpreter CPU.
 Wall-clock audio drift/playback latency — headless fake-audio is environment noise,
 replaced by the deterministic Transport-clock metrics (`callbackLatency*`,
 `cumulativeDrift`). TTFB/FCP/LCP — Lighthouse CI already owns these. Absolute heap
-bytes — GC-noisy; keep deltas and warn-only.
+bytes — GC-noisy; keep deltas.
+
+**Seam tripwire (Layer A):** `scheduleCount` is a verified count on Frère Jacques.
+The CLI `check` command treats a dead Tone.Transport seam (zero scheduled events
+and zero audio observations) as a hard failure — exit code 1 with a reason — rather
+than silently reporting "no data" as a successful run. This is a precondition, not a
+statistical rule; no approved metric's status is changed by it.
 
 ---
 
@@ -404,5 +420,15 @@ first ~10 CI baseline runs on the pinned runner provide real variance data.
   before the next is opened; nothing ships upstream until all nine pass.
 - Known gaps to polish later (non-blocking): hot-path advisory note for hot-path-only
   changes (scenario G).
+- **Baseline accuracy pass (2026-09):** three previously truthless metric families were
+  made real and promoted — (1) **recursion**: `maxLogicalDepth` (exact per-executed-block
+  `queue + parentFlowQueue` depth; musical-tree ≈254, ascending ≈28) is a verified metric,
+  superseding the JS-nesting-only `maxDepth` trace; (2) **memory**: `memoryDelta` /
+  `retainedHeap` are verified after GC-forced reads (Chrome `--expose-gc` +
+  `window.gc()` before each heap read — headless unforced reads were stale zeros);
+  (3) **audio** stays warn-only pending the Layer C real-clock spike, with a new verified
+  `scheduleCount` and a Layer A seam tripwire in `check` (dead Tone.Transport seam ⇒
+  hard exit, never silent "no data"). PerfSense pinned to `53ae5d2`. Baseline refresh
+  after the spike review populates `baseline.json` with the promoted metrics.
 - Next step (gated on A–I passing): offer upstream to `sugarlabs/musicblocks`
   (LICENSE/AGPL headers first, then a PR carrying the repo split from Section 4).
