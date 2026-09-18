@@ -4,12 +4,13 @@ env:
     # Immutable pin: this workflow always builds and runs this exact
     # revision of PerfSense-AI. Verify the SHA is still current before
     # changing it (tags do not exist on the repo yet).
-    # 3839557 = AI analysis enabled: report renders the AI provider's
-    #           regression analysis (needs OPENAI_API_KEY secret) and passes
-    #           real git context to the prompt. On top of 836298b (maxLogicalDepth
+    # c223209 = AI analysis enabled via Ollama (free local LLM, no API key):
+    #           report renders the AI provider's regression analysis and passes
+    #           real git context to the prompt. On top of 3839557 (AI rendering
+    #           + gitContext), which is on top of 836298b (maxLogicalDepth
     #           verified metric, GC-forced memory reads, scheduleCount + Layer A
     #           seam tripwire).
-    PERFSENSE_REF: 3839557fc4b8435fe73800148daf60edbdc06bcc
+    PERFSENSE_REF: c223209d7915e64dc800c334649a02c3bf4800dc
 
 # Runs on PRs that touch runtime code. Posts a single performance comparison
 # comment. Comment-only — never fails checks or blocks merges.
@@ -195,6 +196,13 @@ jobs:
                     echo "has_results=true" >> "$GITHUB_OUTPUT"
                   fi
 
+            - name: Install Ollama (free local LLM for AI analysis)
+              if: always() && steps.changed.outputs.changed == 'true' && steps.baseline.outputs.exists == 'true' && steps.benchmark.outputs.has_results == 'true'
+              run: |
+                  curl -fsSL https://ollama.com/install.sh | sh
+                  nohup ollama serve > /tmp/ollama.log 2>&1 &
+                  ollama pull llama3
+
             - name: Generate comparison report
               if: always() && steps.changed.outputs.changed == 'true' && steps.baseline.outputs.exists == 'true' && steps.benchmark.outputs.has_results == 'true'
               id: report
@@ -205,8 +213,8 @@ jobs:
                     --current pr-results.json \
                     --config perfsense.config.json \
                     --repository . \
-                    --ai-provider openai \
-                    --api-key "${{ secrets.OPENAI_API_KEY }}" > report-output.md
+                    --ai-provider ollama \
+                    --ai-model llama3 > report-output.md
                   REPORT_EXIT=$?
                   echo "report_exit=$REPORT_EXIT" >> "$GITHUB_ENV"
 
