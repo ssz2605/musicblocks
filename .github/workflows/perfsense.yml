@@ -4,13 +4,13 @@ env:
     # Immutable pin: this workflow always builds and runs this exact
     # revision of PerfSense-AI. Verify the SHA is still current before
     # changing it (tags do not exist on the repo yet).
-    # c223209 = AI analysis enabled via Ollama (free local LLM, no API key):
-    #           report renders the AI provider's regression analysis and passes
-    #           real git context to the prompt. On top of 3839557 (AI rendering
-    #           + gitContext), which is on top of 836298b (maxLogicalDepth
-    #           verified metric, GC-forced memory reads, scheduleCount + Layer A
-    #           seam tripwire).
-    PERFSENSE_REF: c223209d7915e64dc800c334649a02c3bf4800dc
+    # 5c3f081 = AI analysis fills per-metric gaps: when the deterministic engine
+    #           has no likely cause (e.g. bootstrapTotal/initTotal), a focused
+    #           per-metric Ollama query explains that metric in its detail block.
+    #           On top of c223209 (ollama default model), 3839557 (AI rendering +
+    #           gitContext), 836298b (maxLogicalDepth verified metric, GC-forced
+    #           memory reads, scheduleCount + Layer A seam tripwire).
+    PERFSENSE_REF: 5c3f081a7bc1e6a038ad82ed89ed84833ab46901
 
 # Runs on PRs that touch runtime code. Posts a single performance comparison
 # comment. Comment-only — never fails checks or blocks merges.
