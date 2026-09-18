@@ -199,8 +199,25 @@ jobs:
             - name: Install Ollama (free local LLM for AI analysis)
               if: always() && steps.changed.outputs.changed == 'true' && steps.baseline.outputs.exists == 'true' && steps.benchmark.outputs.has_results == 'true'
               run: |
+                  # The installer starts a systemd service that holds port 11434; stop it so our
+                  # own background server can bind, otherwise `nohup ollama serve` dies (EADDRINUSE)
+                  # and `ollama pull` runs before any server is reachable.
                   curl -fsSL https://ollama.com/install.sh | sh
+                  systemctl stop ollama || true
                   nohup ollama serve > /tmp/ollama.log 2>&1 &
+                  # Wait until the Ollama API actually responds before pulling the model.
+                  for i in $(seq 1 60); do
+                    if curl -fsS http://127.0.0.1:11434/api/version > /dev/null 2>&1; then
+                      echo "Ollama API ready after ${i} attempts"
+                      break
+                    fi
+                    sleep 2
+                  done
+                  if ! curl -fsS http://127.0.0.1:11434/api/version > /dev/null 2>&1; then
+                    echo "::error::Ollama API never became ready; tail of /tmp/ollama.log:"
+                    tail -n 50 /tmp/ollama.log || true
+                    exit 1
+                  fi
                   ollama pull llama3
 
             - name: Generate comparison report
