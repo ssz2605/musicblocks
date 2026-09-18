@@ -4,11 +4,12 @@ env:
     # Immutable pin: this workflow always builds and runs this exact
     # revision of PerfSense-AI. Verify the SHA is still current before
     # changing it (tags do not exist on the repo yet).
-    # 53ae5d2 = recursion + memory + seam gate: MaxLogicalDepth verified
-    #           metric (musical-tree, ascending), GC-forced memory reads
-    #           (real memoryDelta/retainedHeap), scheduleCount + Layer A
-    #           seam tripwire in check, PERFSENSE_HEADED switch (Layer C).
-    PERFSENSE_REF: 53ae5d20f30e0a13739d76c36f5adc148f8e8f07
+    # 3839557 = AI analysis enabled: report renders the AI provider's
+    #           regression analysis (needs OPENAI_API_KEY secret) and passes
+    #           real git context to the prompt. On top of 836298b (maxLogicalDepth
+    #           verified metric, GC-forced memory reads, scheduleCount + Layer A
+    #           seam tripwire).
+    PERFSENSE_REF: 3839557fc4b8435fe73800148daf60edbdc06bcc
 
 # Runs on PRs that touch runtime code. Posts a single performance comparison
 # comment. Comment-only — never fails checks or blocks merges.
@@ -203,7 +204,9 @@ jobs:
                     --baseline baseline.json \
                     --current pr-results.json \
                     --config perfsense.config.json \
-                    --repository . > report-output.md
+                    --repository . \
+                    --ai-provider openai \
+                    --api-key "${{ secrets.OPENAI_API_KEY }}" > report-output.md
                   REPORT_EXIT=$?
                   echo "report_exit=$REPORT_EXIT" >> "$GITHUB_ENV"
 
