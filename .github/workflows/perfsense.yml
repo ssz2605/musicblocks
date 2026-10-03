@@ -32,7 +32,11 @@ env:
     #           actually withhold verdicts, not just compare refs), plus the
     #           quota-display fix. Test-only on top of 8c57213; pinned anyway
     #           so both pins name one revision.
-    PERFSENSE_REF: 244c60c3fdc1ca30b84a2a3714c4577512b791ea
+    # 56618ec = the cgroup v1 throttle path derives `throttled` like v2 does.
+    #           v1 read the quota, parsed it, and then returned unknown,
+    #           discarding the answer — so the CPU-contention check could
+    #           never fire on a constrained v1 host.
+    PERFSENSE_REF: 56618ececd8ab03a46b7cb523fb76debdab48bae
 
 # Runs on PRs that touch runtime code. Posts a single performance comparison
 # comment. Comment-only — never fails checks or blocks merges.

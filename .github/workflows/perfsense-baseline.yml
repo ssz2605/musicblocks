@@ -6,11 +6,12 @@ env:
     # against runs from another — two revisions can collect different metric
     # sets and time the same one differently, so the delta describes the
     # measuring code rather than the change.
-    # 244c60c = baseline validity gate + harness provenance. A baseline now
-    #           records the PERFSENSE_REF that produced it, and this workflow
-    #           runs `baseline validate` between saving and pushing so an
+    # 56618ec = baseline validity gate + harness provenance (8c57213) plus the
+    #           cgroup v1 throttle fix. A baseline now records the
+    #           PERFSENSE_REF that produced it, and this workflow runs
+    #           `baseline validate` between saving and pushing so an
     #           untrustworthy capture never reaches the baseline branch.
-    PERFSENSE_REF: 244c60c3fdc1ca30b84a2a3714c4577512b791ea
+    PERFSENSE_REF: 56618ececd8ab03a46b7cb523fb76debdab48bae
 
 # Regenerates baseline.json from master on a weekly schedule.
 # Opens a "chore: refresh perf baseline" PR for human review.
