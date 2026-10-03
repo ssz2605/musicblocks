@@ -13,7 +13,10 @@ env:
     # fff36af = feed regression data in the user turn (base llama3 ignored the
     #           system prompt and replied 'no data provided'), default Ollama
     #           model -> llama3.1:8b, and render All approved metrics open.
-    PERFSENSE_REF: fff36af4a2a5c1960a74d75a6f9fa77ae9c47afe
+    # c5d8f65 = perf classification redesign: 6-status classification (no fake
+    #           "Improved"), contract table, env/age gates, near-zero pct-null,
+    #           NO_BASELINE rows, AI explanation-only (aiNeeded gate).
+    PERFSENSE_REF: c5d8f655a0eb1ec4f9318efaa1596187692b7360
 
 # Runs on PRs that touch runtime code. Posts a single performance comparison
 # comment. Comment-only — never fails checks or blocks merges.
