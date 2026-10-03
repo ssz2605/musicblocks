@@ -16,7 +16,23 @@ env:
     # c5d8f65 = perf classification redesign: 6-status classification (no fake
     #           "Improved"), contract table, env/age gates, near-zero pct-null,
     #           NO_BASELINE rows, AI explanation-only (aiNeeded gate).
-    PERFSENSE_REF: c5d8f655a0eb1ec4f9318efaa1596187692b7360
+    # 4751e32 = every measured metric resolves to its code seam. 12 of the 22
+    #           approved slots had no affinity entry, so the deterministic
+    #           engine produced no cause and the per-metric AI was asked to
+    #           invent one — the 6-step hallucination chain.
+    # 8c57213 = baseline validity gate + harness provenance. Baselines record
+    #           which PerfSense revision produced them and a comparison refuses
+    #           to issue verdicts across two; the runner fingerprint gains load
+    #           average and cgroup CPU quota; `baseline validate` blocks a
+    #           capture that is bimodal, under-sampled, over a configured
+    #           spread limit, or taken on a CPU-constrained runner. Frère and
+    #           crabcanon regain the interpreter metrics their scenario already
+    #           collected.
+    # 244c60c = the tests that hold that gate to its wiring (report.ts must
+    #           actually withhold verdicts, not just compare refs), plus the
+    #           quota-display fix. Test-only on top of 8c57213; pinned anyway
+    #           so both pins name one revision.
+    PERFSENSE_REF: 244c60c3fdc1ca30b84a2a3714c4577512b791ea
 
 # Runs on PRs that touch runtime code. Posts a single performance comparison
 # comment. Comment-only — never fails checks or blocks merges.

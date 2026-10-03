@@ -69,5 +69,27 @@
         "heapAfterBoot": { "warning": 15, "fail": 10000, "maxStatus": "warning" },
         "cumulativeDrift": { "warning": 30, "fail": 10000, "maxStatus": "warning" },
         "scheduleCount": { "warning": 20, "fail": 50 }
+    },
+    "validity": {
+        "maxDivergencePct": 10,
+        "minSamples": 5,
+        "rejectThrottled": true,
+        "maxSpreadPct": {
+            "bootstrapTotal": 10,
+            "initTotal": 20,
+            "heapAfterBoot": 10,
+            "projectLoadTime": 10,
+            "saveTime": 10,
+            "exportMIDITime": 10,
+            "saveAsLilypondTime": 10,
+            "callbackLatencyMean": 5,
+            "callbackLatencyMax": 5,
+            "voiceOnsetError": 10,
+            "executionTime": 5,
+            "maxQueueDepth": 20,
+            "blocksExecuted": 5,
+            "maxLogicalDepth": 10,
+            "scheduleCount": 5
+        }
     }
 }
