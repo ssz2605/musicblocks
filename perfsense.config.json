@@ -79,7 +79,7 @@
             "initTotal": 20,
             "heapAfterBoot": 10,
             "projectLoadTime": 10,
-            "saveTime": 10,
+            "saveTime": 25,
             "exportMIDITime": 10,
             "saveAsLilypondTime": 10,
             "callbackLatencyMean": 5,

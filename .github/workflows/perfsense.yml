@@ -36,7 +36,11 @@ env:
     #           v1 read the quota, parsed it, and then returned unknown,
     #           discarding the answer — so the CPU-contention check could
     #           never fire on a constrained v1 host.
-    PERFSENSE_REF: 56618ececd8ab03a46b7cb523fb76debdab48bae
+    # eff3df0 = count metrics gated below their own quantization floor are
+    #           exempt, matching the continuous resolution floor. A count
+    #           cannot move in fractions, so at median 8 a one-unit spread is
+    #           already 25% and any tighter limit fires on rounding.
+    PERFSENSE_REF: eff3df00a502416367f39cf7c43c3cf83f1b207d
 
 # Runs on PRs that touch runtime code. Posts a single performance comparison
 # comment. Comment-only — never fails checks or blocks merges.

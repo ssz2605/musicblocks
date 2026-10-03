@@ -11,7 +11,11 @@ env:
     #           PERFSENSE_REF that produced it, and this workflow runs
     #           `baseline validate` between saving and pushing so an
     #           untrustworthy capture never reaches the baseline branch.
-    PERFSENSE_REF: 56618ececd8ab03a46b7cb523fb76debdab48bae
+    # eff3df0 = count metrics gated below their own quantization floor are
+    #           exempt. Without it this workflow blocked on crabcanon
+    #           maxQueueDepth, whose median 8 and p10 8 -> p90 10 is a one-unit
+    #           difference that a 20% limit read as 25% of noise.
+    PERFSENSE_REF: eff3df00a502416367f39cf7c43c3cf83f1b207d
 
 # Regenerates baseline.json from master on a weekly schedule.
 # Opens a "chore: refresh perf baseline" PR for human review.
