@@ -15,7 +15,12 @@ env:
     #           exempt. Without it this workflow blocked on crabcanon
     #           maxQueueDepth, whose median 8 and p10 8 -> p90 10 is a one-unit
     #           difference that a 20% limit read as 25% of noise.
-    PERFSENSE_REF: eff3df00a502416367f39cf7c43c3cf83f1b207d
+    # 88db761 = fixes the load-phase readiness rule that made RainbowConnection
+    #           measure bimodal. Two captures were refused by the validity gate
+    #           for it; projectLoadTime and exportMIDITime moved in opposite
+    #           directions on every run, which is the signature of the harness
+    #           declaring "ready" during a lull between decode stages.
+    PERFSENSE_REF: 88db7616aad9f71654cf8a739e5a04da63a027e3
 
 # Regenerates baseline.json from master on a weekly schedule.
 # Opens a "chore: refresh perf baseline" PR for human review.
