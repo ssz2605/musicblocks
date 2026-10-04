@@ -104,9 +104,20 @@ jobs:
 
             - name: Run benchmark suite
               run: |
+                  # Redirect rather than pipe through tee, and carry the exit
+                  # code by hand. Two reasons, both load-bearing:
+                  #   - the cli calls process.exit(), and Node writes to a pipe
+                  #     asynchronously but to a file synchronously, so a pipe
+                  #     could truncate the tail of the log;
+                  #   - with a bare `| tee` the pipeline status is tee's, which
+                  #     would let this job save a baseline from a failed capture.
+                  set +e
                   node /tmp/perfsense/packages/cli/dist/index.js benchmark \
                     --config perfsense.config.json \
-                    --out benchmark-results.json
+                    --out benchmark-results.json > benchmark.log 2>&1
+                  BENCH_EXIT=$?
+                  cat benchmark.log
+                  exit $BENCH_EXIT
 
             - name: Save baseline
               run: |
@@ -155,10 +166,42 @@ jobs:
                   # divergence check needs. A new commit legitimately moves
                   # every median, so the check only reports a verdict when the
                   # commit and the runner both match.
+                  #
+                  # set +e plus an explicit exit is what keeps this gate honest
+                  # while still writing validate.log: under the default bash -e
+                  # the node line would abort the script before the exit code
+                  # was captured or the log echoed, and a bare `| tee` would
+                  # report tee's status instead of validate's. Redirecting to a
+                  # file (synchronous in Node, unlike a pipe) also guarantees
+                  # the defect table - which validate writes to stderr - is
+                  # complete in the file the upload step collects.
+                  set +e
                   node /tmp/perfsense/packages/cli/dist/index.js baseline validate \
                     --baseline baseline-new.json \
                     --previous baseline.json \
-                    --config perfsense.config.json
+                    --config perfsense.config.json > validate.log 2>&1
+                  VALIDATE_EXIT=$?
+                  cat validate.log
+                  exit $VALIDATE_EXIT
+
+            # Deliberately not gated on the previous step's outcome: when
+            # validate fails, the commit step never runs and this job's only
+            # surviving output is the runner log. Always() is what keeps the
+            # capture and the defect table retrievable on exactly the runs
+            # worth diagnosing. Caveat: always() does not fire if the job hit
+            # timeout-minutes and was cancelled.
+            - name: Upload capture and validate output
+              if: always()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: perfsense-capture
+                  path: |
+                      benchmark-results.json
+                      baseline-new.json
+                      benchmark.log
+                      validate.log
+                  if-no-files-found: warn
+                  retention-days: 30
 
             - name: Push to refresh branch
               run: |
