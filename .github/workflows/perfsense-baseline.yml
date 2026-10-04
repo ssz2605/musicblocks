@@ -20,7 +20,7 @@ env:
     #           for it; projectLoadTime and exportMIDITime moved in opposite
     #           directions on every run, which is the signature of the harness
     #           declaring "ready" during a lull between decode stages.
-    PERFSENSE_REF: 88db7616aad9f71654cf8a739e5a04da63a027e3
+    PERFSENSE_REF: aa1bf85c857beea91e00154418046d7893a54498
 
 # Regenerates baseline.json from master on a weekly schedule.
 # Opens a "chore: refresh perf baseline" PR for human review.

@@ -45,7 +45,7 @@ env:
     #           It ended the wait mid-decode on half the RainbowConnection
     #           runs, reporting projectLoadTime ~20% short and handing the
     #           still-busy app to the export phase.
-    PERFSENSE_REF: 88db7616aad9f71654cf8a739e5a04da63a027e3
+    PERFSENSE_REF: aa1bf85c857beea91e00154418046d7893a54498
 
 # Runs on PRs that touch runtime code. Posts a single performance comparison
 # comment. Comment-only — never fails checks or blocks merges.
