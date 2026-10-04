@@ -61,7 +61,7 @@ jobs:
     rebaseline:
         name: Regenerate Baseline
         runs-on: ubuntu-latest
-        timeout-minutes: 60
+        timeout-minutes: 90
         steps:
             - name: Checkout master
               uses: actions/checkout@v4

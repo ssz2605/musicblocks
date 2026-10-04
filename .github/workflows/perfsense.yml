@@ -85,7 +85,7 @@ jobs:
     benchmark:
         name: Performance Comparison
         runs-on: ubuntu-latest
-        timeout-minutes: 60
+        timeout-minutes: 90
         steps:
             - name: Checkout PR code
               uses: actions/checkout@v4
