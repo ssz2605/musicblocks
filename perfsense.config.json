@@ -13,10 +13,13 @@
         "index.html": ["bootstrap"],
         "RainbowConnection.html": ["openProject", "saveExport"],
         "Frere-Jacques.html": ["openProject", "playToCompletion"],
-        "musical-tree.html": ["openProject", "playToCompletion"],
+        "musical-tree.html": ["openProject", "playToCompletion", "repeatedRun"],
         "ascending-notes-color-spiral.html": ["openProject", "playToCompletion"],
-        "crabcanon-plot.html": ["openProject", "playToCompletion"]
+        "crabcanon-plot.html": ["openProject", "playToCompletion", "interact"]
     },
+    "repeatRuns": 10,
+    "panSteps": 24,
+    "panSettleMs": 120,
     "fixtures": {
         "RainbowConnection.html": "examples/RainbowConnection.html",
         "Frere-Jacques.html": "examples/Frere-Jacques.html",
@@ -45,7 +48,18 @@
         "retainedHeap",
         "scheduleLagMean",
         "scheduleLagMax",
-        "scheduleCount"
+        "stageUpdateCallCount",
+        "peakHeapDuringExport",
+        "logoSoundsRetained",
+        "stageUpdateTime",
+        "stageUpdateMax",
+        "cacheRebuildCount",
+        "viewportCulledBlocks",
+        "transportEventRatio",
+        "synthsRetained",
+        "canvasInkCoverage",
+        "canvasInkDrift",
+        "retainedHeapSlope"
     ],
     "thresholds": {
         "bootstrapTotal": { "warning": 10, "fail": 25 },
@@ -68,7 +82,18 @@
         "retainedHeap": { "warning": 15, "fail": 10000 },
         "heapAfterBoot": { "warning": 15, "fail": 10000, "maxStatus": "warning" },
         "cumulativeDrift": { "warning": 30, "fail": 10000, "maxStatus": "warning" },
-        "scheduleCount": { "warning": 20, "fail": 50 }
+        "stageUpdateCallCount": { "warning": 25, "fail": 10000, "maxStatus": "warning" },
+        "peakHeapDuringExport": { "warning": 20, "fail": 10000 },
+        "logoSoundsRetained": { "warning": 20, "fail": 10000, "maxStatus": "warning" },
+        "stageUpdateTime": { "warning": 25, "fail": 10000, "maxStatus": "warning" },
+        "stageUpdateMax": { "warning": 25, "fail": 10000, "maxStatus": "warning" },
+        "cacheRebuildCount": { "warning": 25, "fail": 10000, "maxStatus": "warning" },
+        "viewportCulledBlocks": { "warning": 15, "fail": 10000, "maxStatus": "warning" },
+        "transportEventRatio": { "warning": 20, "fail": 10000, "maxStatus": "warning" },
+        "synthsRetained": { "warning": 20, "fail": 10000, "maxStatus": "warning" },
+        "canvasInkCoverage": { "warning": 20, "fail": 10000, "maxStatus": "warning" },
+        "canvasInkDrift": { "warning": 20, "fail": 10000, "maxStatus": "warning" },
+        "retainedHeapSlope": { "warning": 25, "fail": 10000, "maxStatus": "warning" }
     },
     "validity": {
         "maxDivergencePct": 10,
@@ -89,7 +114,16 @@
             "maxQueueDepth": 20,
             "blocksExecuted": 5,
             "maxLogicalDepth": 10,
-            "scheduleCount": 5
+            "stageUpdateCallCount": 20,
+            "cacheRebuildCount": 20,
+            "viewportCulledBlocks": 5,
+            "transportEventRatio": 20,
+            "synthsRetained": 5,
+            "logoSoundsRetained": 5,
+            "canvasInkCoverage": 5,
+            "canvasInkDrift": 10,
+            "retainedHeapSlope": 20,
+            "peakHeapDuringExport": 15
         }
     }
 }

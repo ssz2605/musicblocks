@@ -231,6 +231,30 @@ jobs:
                     echo "has_results=true" >> "$GITHUB_OUTPUT"
                   fi
 
+            - name: Run seam tripwire (Layer A)
+              if: always() && steps.changed.outputs.changed == 'true' && steps.baseline.outputs.exists == 'true' && steps.benchmark.outputs.has_results == 'true'
+              id: tripwire
+              run: |
+                  # Runs BEFORE the report step so a dead Tone.Transport seam fails
+                  # the run instead of producing a report whose audio columns are
+                  # silently null. `check` exits non-zero when
+                  # findDeadSeamPages() flags an approved audio page whose
+                  # transportEventRatio is absent or below the floor
+                  # (js/logo.js:1841-1856). This is the #7703 regression gate.
+                  set +e
+                  node /tmp/perfsense/packages/cli/dist/index.js check \
+                    --config perfsense.config.json \
+                    --baseline baseline.json \
+                    --current pr-results.json 2>&1 | tee tripwire.log
+                  TRIPWIRE_EXIT=$?
+                  echo "tripwire_exit=$TRIPWIRE_EXIT" >> "$GITHUB_ENV"
+                  if [ "$TRIPWIRE_EXIT" -ne 0 ]; then
+                    echo "::error::Tone.Transport seam tripwire failed: playback scheduling may have reverted from Tone.Transport to the setTimeout fallback (PR #7703)."
+                    echo "seam_ok=false" >> "$GITHUB_OUTPUT"
+                  else
+                    echo "seam_ok=true" >> "$GITHUB_OUTPUT"
+                  fi
+
             - name: Install Ollama (free local LLM for AI analysis)
               if: always() && steps.changed.outputs.changed == 'true' && steps.baseline.outputs.exists == 'true' && steps.benchmark.outputs.has_results == 'true'
               run: |

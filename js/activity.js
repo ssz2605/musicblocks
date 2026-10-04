@@ -2876,6 +2876,23 @@ class Activity {
                         }
                     }
                 };
+                // Render-loop seam for the interact scenario. The scroll keys
+                // (js/activity/keyboard-controller.js:350-364) move
+                // blocksContainer and set stageDirty but do not restart the
+                // loop; refreshCanvas() is what a real mouse move calls to do
+                // both (js/activity.js:2154-2159). Exposing it lets the
+                // benchmark drive the same path a user drives, without
+                // synthesising canvas mouse events that would have to pass
+                // EaselJS background hit-testing on a fully packed workspace.
+                mbBridge.render = {
+                    refreshCanvas: () => this.refreshCanvas(),
+                    get blocksContainer() {
+                        return that.blocksContainer;
+                    },
+                    get isRenderLoopRunning() {
+                        return that._renderLoopRunning;
+                    }
+                };
                 mbBridge.ui = {
                     save: async () => this.save.saveHTML(this),
                     exportMIDI: () =>
