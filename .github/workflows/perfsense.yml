@@ -96,17 +96,15 @@ jobs:
             - name: Check runtime files changed
               id: changed
               run: |
-                  # Skip provably inert changes: test files under js/ (jest
-                  # __tests__ and *.test.js) never affect runtime performance,
-                  # so a tests-only PR must not trigger a benchmark. Anything
-                  # outside the runtime pathspec (docs, locales, sounds, images,
-                  # .github, README...) is already excluded by the pathspec.
+                  # Runtime means js/, css/, dist/, or index.html; test-only js/
+                  # and cypress/ changes never trigger a benchmark or comment.
                   if git diff --exit-code --quiet \
                     "${{ github.event.pull_request.base.sha }}" \
                     "${{ github.event.pull_request.head.sha }}" \
                     -- js css dist index.html \
                     ':(exclude)js/**/__tests__/**' \
-                    ':(exclude)js/**/*.test.js'; then
+                    ':(exclude)js/**/*.test.js' \
+                    ':(exclude)cypress/**'; then
                     echo "No runtime files changed; skipping PerfSense benchmark."
                     echo "changed=false" >> "$GITHUB_OUTPUT"
                   else
@@ -294,7 +292,7 @@ jobs:
                   REPORT_EXIT=$?
                   echo "report_exit=$REPORT_EXIT" >> "$GITHUB_ENV"
 
-                  if [ "$REPORT_EXIT" -ne 0 ] || [ ! -s report-output.md ]; then
+                  if [ ! -s report-output.md ]; then
                     echo "Report generation failed"
                     echo "has_report=false" >> "$GITHUB_OUTPUT"
                   else
@@ -321,6 +319,11 @@ jobs:
                       echo "> Warning: Report could not be generated. Results available but not compared."
                       echo ""
                     else
+                      if [ "${{ env.report_exit }}" -ne 0 ]; then
+                        CHANGED_COUNT=$(grep -c '|.*Changed' report-output.md || true)
+                        echo "> ${CHANGED_COUNT} optimization fingerprint(s) CHANGED (exit code ${{ env.report_exit }})."
+                        echo ""
+                      fi
                       cat report-output.md
                       echo ""
                       if [ "${{ steps.benchmark.outputs.sample_count }}" -lt "${{ steps.benchmark.outputs.sample_floor }}" ]; then
