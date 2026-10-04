@@ -40,7 +40,6 @@
         "callbackLatencyMax",
         "voiceOnsetError",
         "executionTime",
-        "maxQueueDepth",
         "blocksExecuted",
         "maxDepth",
         "maxLogicalDepth",
