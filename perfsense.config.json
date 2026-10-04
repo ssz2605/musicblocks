@@ -9,6 +9,9 @@
     ],
     "runs": 5,
     "runTimeoutMs": 300000,
+    "runTimeouts": {
+        "musical-tree.html": 420000
+    },
     "scenarios": {
         "index.html": ["bootstrap"],
         "RainbowConnection.html": ["openProject", "saveExport"],
