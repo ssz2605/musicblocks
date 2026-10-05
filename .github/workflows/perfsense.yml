@@ -48,9 +48,11 @@ env:
     # 56d2c0f = retires maxQueueDepth from musical-tree.
     # 4102c1a = required-cell gate on save and validate; Rainbow export cells
     #           restored as warn-only; musical-tree synthsRetained demoted to a
-    #           non-required exact cell; static fingerprint explanations. Must
-    #           stay identical to the pin in perfsense-baseline.yml.
-    PERFSENSE_REF: 4102c1a2a799ee8fdc2ba1178c9f64f98ee424d1
+    #           non-required exact cell; static fingerprint explanations.
+    # f41ae96 = Freere synthsRetained promoted to required, closing the #7832
+    #           gap; fingerprint loci corrected against 5bd6ae193. Must stay
+    #           identical to the pin in perfsense-baseline.yml.
+    PERFSENSE_REF: f41ae961a3a5590a10b04194eac9912a89f8b5bd
 
 # Runs on PRs that touch runtime code. Posts a single performance comparison
 # comment. Comment-only — never fails checks or blocks merges.

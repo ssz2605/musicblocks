@@ -24,10 +24,13 @@ env:
     # 4102c1a = required-cell gate on save and validate; Rainbow export cells
     #           restored as warn-only; musical-tree synthsRetained demoted to a
     #           non-required exact cell; static fingerprint explanations.
+    # f41ae96 = Freere synthsRetained promoted to required, which closes the
+    #           #7832 gap (every one of the seven merged perf PRs now has a
+    #           required cell); fingerprint loci corrected against 5bd6ae193.
     #           baseline.json currently records harness.ref 56d2c0f, so it does
     #           NOT match this pin: the next capture must be a re-capture, which
     #           is what brings cacheRebuildCount and viewportCulledBlocks in.
-    PERFSENSE_REF: 4102c1a2a799ee8fdc2ba1178c9f64f98ee424d1
+    PERFSENSE_REF: f41ae961a3a5590a10b04194eac9912a89f8b5bd
 
 # Regenerates baseline.json from master on a weekly schedule.
 # Opens a "chore: refresh perf baseline" PR for human review.
