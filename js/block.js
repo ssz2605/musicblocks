@@ -715,9 +715,9 @@ class Block {
             }
         }
 
-        if (this._viewportVisible !== false) {
-            this.updateCache();
-        }
+        // MOCK REGRESSION 6: the off-screen guard PR #7815 added around this cache
+        // rebuild was removed. See branch commit message.
+        this.updateCache();
     }
 
     /**
@@ -799,9 +799,9 @@ class Block {
             }
         }
 
-        if (this._viewportVisible !== false) {
-            this.updateCache();
-        }
+        // MOCK REGRESSION 6: the off-screen guard PR #7815 added around this cache
+        // rebuild was removed. See branch commit message.
+        this.updateCache();
     }
 
     unhighlightSelectedBlocks(blk, selection) {
