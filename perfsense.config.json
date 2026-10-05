@@ -36,6 +36,8 @@
         "heapAfterBoot",
         "projectLoadTime",
         "saveTime",
+        "exportMIDITime",
+        "saveAsLilypondTime",
         "callbackLatencyMean",
         "callbackLatencyMax",
         "voiceOnsetError",
