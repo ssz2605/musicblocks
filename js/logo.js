@@ -1817,27 +1817,6 @@ class Logo {
                     logo.stepQueue[turtle] = [];
                 }
                 logo.stepQueue[turtle].push(blk);
-            } else if (
-                logo.turtleDelay === 0 &&
-                delay > 0 &&
-                logo.synth.transport.isAvailable &&
-                logo.synth.transport.isClockRunning &&
-                tur._transportTime !== null
-            ) {
-                const transportTime = Math.max(
-                    tur._transportTime + delay / 1000,
-                    logo.synth.transport.seconds
-                );
-                tur.delayParameters = { blk: blk, flow: isflow, arg: receivedArg };
-                tur._transportEventId = logo.synth.transport.schedule(audioContextTime => {
-                    const tur2 = logo.activity.turtles.ithTurtle(turtle);
-                    tur2._transportTime = logo.synth.transport.getSecondsAtTime(audioContextTime);
-                    tur2._transportEventId = null;
-                    tur2.delayParameters = null;
-                    if (!logo.stopTurtle) {
-                        logo.runFromBlockNow(logo, turtle, blk, isflow, receivedArg);
-                    }
-                }, transportTime);
             } else {
                 tur.delayParameters = { blk: blk, flow: isflow, arg: receivedArg };
                 tur.delayTimeout = logo._timerManager.setGuardedTimeout(
