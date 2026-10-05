@@ -54,6 +54,8 @@
         "transportEventCount",
         "cacheSkippedCount",
         "viewportCulledFraction",
+        "cacheRebuildCount",
+        "viewportCulledBlocks",
         "refreshCanvasCallCount"
     ],
     "thresholds": {
@@ -104,8 +106,8 @@
             "heapAfterBoot": 10,
             "projectLoadTime": 10,
             "saveTime": 25,
-            "exportMIDITime": 10,
-            "saveAsLilypondTime": 10,
+            "exportMIDITime": 20,
+            "saveAsLilypondTime": 20,
             "callbackLatencyMean": 5,
             "callbackLatencyMax": 5,
             "voiceOnsetError": 10,

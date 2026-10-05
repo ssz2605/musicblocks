@@ -20,7 +20,14 @@ env:
     #           for it; projectLoadTime and exportMIDITime moved in opposite
     #           directions on every run, which is the signature of the harness
     #           declaring "ready" during a lull between decode stages.
-    PERFSENSE_REF: 56d2c0f4ba861b713dac9f14447d697c770d69a0
+    # 56d2c0f = retires maxQueueDepth from musical-tree.
+    # 4102c1a = required-cell gate on save and validate; Rainbow export cells
+    #           restored as warn-only; musical-tree synthsRetained demoted to a
+    #           non-required exact cell; static fingerprint explanations.
+    #           baseline.json currently records harness.ref 56d2c0f, so it does
+    #           NOT match this pin: the next capture must be a re-capture, which
+    #           is what brings cacheRebuildCount and viewportCulledBlocks in.
+    PERFSENSE_REF: 4102c1a2a799ee8fdc2ba1178c9f64f98ee424d1
 
 # Regenerates baseline.json from master on a weekly schedule.
 # Opens a "chore: refresh perf baseline" PR for human review.
