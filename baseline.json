@@ -1,279 +1,672 @@
 {
-  "schema": "perfsense-baseline-v1",
-  "createdAt": "2026-09-15T18:04:19.673Z",
+  "schema": "perfsense-baseline-v2",
+  "schemaVersion": 2,
+  "createdAt": "2026-10-05T03:50:07.118Z",
+  "generatedAt": "2026-10-05T03:50:07.118Z",
   "runs": 5,
+  "warmup": 0,
   "pages": {
     "index.html": {
       "bootstrapTotal": {
-        "median": 5500.4,
-        "p10": 5489.7,
-        "p90": 5520.280000000001,
+        "median": 5523.1,
+        "p10": 5514.66,
+        "p90": 5541.88,
+        "mean": 5526.32,
+        "sd": 15.076040594267283,
+        "mad": 7.900000000000546,
+        "min": 5514.3,
+        "max": 5551.4,
+        "p25": 5515.2,
+        "p75": 5527.6,
+        "cv": 0.002728043362358185,
+        "n": 5,
+        "invalid": 0,
         "values": [
-          5516.8,
-          5522.6,
-          5484.3,
-          5497.8,
-          5500.4
-        ]
+          5551.4,
+          5527.6,
+          5523.1,
+          5514.3,
+          5515.2
+        ],
+        "stability": {
+          "tier": "stable",
+          "flagged": false,
+          "note": "low variance: reliable for improvement certification"
+        }
       },
       "initTotal": {
-        "median": 255.9,
-        "p10": 244.8,
-        "p90": 266.56,
+        "median": 262.6,
+        "p10": 255.52,
+        "p90": 275.90000000000003,
+        "mean": 264.52000000000004,
+        "sd": 10.956596186772602,
+        "mad": 6,
+        "min": 254.8,
+        "max": 282.3,
+        "p25": 256.6,
+        "p75": 266.3,
+        "cv": 0.041420672110889914,
+        "n": 5,
+        "invalid": 0,
         "values": [
-          264.7,
-          250.5,
-          241,
-          255.9,
-          267.8
-        ]
+          282.3,
+          256.6,
+          262.6,
+          254.8,
+          266.3
+        ],
+        "stability": {
+          "tier": "stable",
+          "flagged": false,
+          "note": "low variance: reliable for improvement certification"
+        }
       },
       "heapAfterBoot": {
-        "median": 47400000,
-        "p10": 44700000,
-        "p90": 47400000,
+        "median": 43959227,
+        "p10": 41536039,
+        "p90": 45412210.6,
+        "mean": 43718244,
+        "sd": 2229516.593174628,
+        "mad": 1280549,
+        "min": 39950095,
+        "max": 45527167,
+        "p25": 43914955,
+        "p75": 45239776,
+        "cv": 0.05099739580516152,
+        "n": 5,
+        "invalid": 0,
         "values": [
-          47400000,
-          44700000,
-          44700000,
-          47400000,
-          47400000
-        ]
+          45239776,
+          43914955,
+          39950095,
+          43959227,
+          45527167
+        ],
+        "stability": {
+          "tier": "moderate",
+          "flagged": false,
+          "note": "moderate variance: improvements need ≥2σ pooled effect"
+        }
       }
     },
     "RainbowConnection.html": {
       "projectLoadTime": {
-        "median": 11696.799999999988,
-        "p10": 9414.360000000033,
-        "p90": 11952.120000000019,
+        "median": 14078.199999999983,
+        "p10": 13995.199999999977,
+        "p90": 14198.079999999993,
+        "mean": 14090.939999999984,
+        "sd": 103.71430952381307,
+        "mad": 51.30000000001746,
+        "min": 13969.599999999977,
+        "max": 14243.799999999988,
+        "p25": 14033.599999999977,
+        "p75": 14129.5,
+        "cv": 0.00736035420800977,
+        "n": 5,
+        "invalid": 0,
         "values": [
-          12026.800000000047,
-          11696.799999999988,
-          9409.800000000047,
-          9421.200000000012,
-          11840.099999999977
-        ]
+          13969.599999999977,
+          14129.5,
+          14078.199999999983,
+          14243.799999999988,
+          14033.599999999977
+        ],
+        "stability": {
+          "tier": "stable",
+          "flagged": false,
+          "note": "low variance: reliable for improvement certification"
+        }
       },
       "saveTime": {
-        "median": 28,
-        "p10": 26.25999999998603,
-        "p90": 30.559999999974387,
+        "median": 28.5,
+        "p10": 27.879999999993014,
+        "p90": 31.41999999998952,
+        "mean": 29.319999999995343,
+        "sd": 2.0079840636772013,
+        "mad": 0.9000000000232831,
+        "min": 27.599999999976717,
+        "max": 32.69999999998254,
+        "p25": 28.300000000017462,
+        "p75": 29.5,
+        "cv": 0.06848513177617736,
+        "n": 5,
+        "invalid": 0,
         "values": [
-          28,
-          30.79999999998836,
-          30.199999999953434,
-          25.5,
-          27.399999999965075
-        ]
+          27.599999999976717,
+          28.300000000017462,
+          28.5,
+          32.69999999998254,
+          29.5
+        ],
+        "stability": {
+          "tier": "moderate",
+          "flagged": false,
+          "note": "moderate variance: improvements need ≥2σ pooled effect"
+        }
       },
-      "exportMIDITime": {
-        "median": 2318.5,
-        "p10": 2290.819999999995,
-        "p90": 2630.4800000000164,
+      "maxDepth": {
+        "median": 100,
+        "p10": 100,
+        "p90": 100,
+        "mean": 100,
+        "sd": 0,
+        "mad": 0,
+        "min": 100,
+        "max": 100,
+        "p25": 100,
+        "p75": 100,
+        "cv": 0,
+        "n": 5,
+        "invalid": 0,
         "values": [
-          2318.5,
-          2290.5,
-          2525.9000000000233,
-          2700.2000000000116,
-          2291.2999999999884
-        ]
+          100,
+          100,
+          100,
+          100,
+          100
+        ],
+        "stability": {
+          "tier": "stable",
+          "flagged": false,
+          "note": "low variance: reliable for improvement certification"
+        }
       },
-      "saveAsLilypondTime": {
-        "median": 1546.5,
-        "p10": 1509.8800000000278,
-        "p90": 1681.8599999999976,
+      "peakHeapDuringExport": {
+        "median": 165558388,
+        "p10": 164263123,
+        "p90": 167061414.6,
+        "mean": 165610625.6,
+        "sd": 1496327.1375737994,
+        "mad": 539697,
+        "min": 163759411,
+        "max": 167873797,
+        "p25": 165018691,
+        "p75": 165842841,
+        "cv": 0.009035212155939101,
+        "n": 5,
+        "invalid": 0,
         "values": [
-          1525,
-          1646.7000000000116,
-          1546.5,
-          1705.2999999999884,
-          1499.8000000000466
-        ]
+          165558388,
+          163759411,
+          167873797,
+          165018691,
+          165842841
+        ],
+        "stability": {
+          "tier": "stable",
+          "flagged": false,
+          "note": "low variance: reliable for improvement certification"
+        }
+      },
+      "refreshCanvasCallCount": {
+        "median": 0,
+        "p10": 0,
+        "p90": 0,
+        "mean": 0,
+        "sd": 0,
+        "mad": 0,
+        "min": 0,
+        "max": 0,
+        "p25": 0,
+        "p75": 0,
+        "cv": null,
+        "n": 5,
+        "invalid": 0,
+        "values": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "stability": {
+          "tier": "extreme",
+          "flagged": true,
+          "note": "extreme variance: improvements demoted to likely-noise unless ≥3σ; investigate measurement method"
+        }
       }
     },
     "Frere-Jacques.html": {
       "callbackLatencyMean": {
-        "median": 751.3305970149238,
-        "p10": 751.1598507462686,
-        "p90": 751.4507462686552,
+        "median": 751.2242537313447,
+        "p10": 751.1510447761179,
+        "p90": 751.298283582091,
+        "mean": 751.2256716417912,
+        "sd": 0.07273315571656644,
+        "mad": 0.05858208955146438,
+        "min": 751.1298507462675,
+        "max": 751.3085820895542,
+        "p25": 751.1828358208937,
+        "p75": 751.2828358208961,
+        "cv": 0.00009681931603536569,
+        "n": 5,
+        "invalid": 0,
         "values": [
-          751.3305970149238,
-          751.3746268656708,
-          751.0619402985069,
-          751.3067164179112,
-          751.5014925373114
-        ]
+          751.3085820895542,
+          751.2242537313447,
+          751.2828358208961,
+          751.1828358208937,
+          751.1298507462675
+        ],
+        "stability": {
+          "tier": "stable",
+          "flagged": false,
+          "note": "low variance: reliable for improvement certification"
+        }
       },
       "callbackLatencyMax": {
-        "median": 2704.29999999993,
-        "p10": 2698.320000000042,
-        "p90": 2707.720000000042,
+        "median": 2696.20000000007,
+        "p10": 2695.9799999999696,
+        "p90": 2697.4,
+        "mean": 2696.5400000000022,
+        "sd": 0.8443932733060016,
+        "mad": 0.2999999999301508,
+        "min": 2695.899999999965,
+        "max": 2698,
+        "p25": 2696.0999999999767,
+        "p75": 2696.5,
+        "cv": 0.0003131395318838218,
+        "n": 5,
+        "invalid": 0,
         "values": [
-          2695.4000000000233,
-          2709.4000000000233,
-          2704.29999999993,
-          2702.70000000007,
-          2705.20000000007
-        ]
-      },
-      "cumulativeDrift": {
-        "median": 1.5483720972042647e-9,
-        "p10": 1.4278803917022741e-9,
-        "p90": 1.771524438254346e-9,
-        "values": [
-          1.347881806168516e-9,
-          1.7071322133688227e-9,
-          1.5478782700029114e-9,
-          1.5483720972042647e-9,
-          1.8144525881780282e-9
-        ]
+          2696.0999999999767,
+          2695.899999999965,
+          2696.5,
+          2698,
+          2696.20000000007
+        ],
+        "stability": {
+          "tier": "stable",
+          "flagged": false,
+          "note": "low variance: reliable for improvement certification"
+        }
       },
       "voiceOnsetError": {
-        "median": 691.6999999999534,
-        "p10": 689.8200000000419,
-        "p90": 700.2200000000419,
+        "median": 667.7000000000698,
+        "p10": 659.6,
+        "p90": 685.7000000000232,
+        "mean": 670.7600000000209,
+        "sd": 14.494757673043203,
+        "mad": 7.800000000104774,
+        "min": 659.4000000000233,
+        "max": 694.9000000000233,
+        "p25": 659.8999999999651,
+        "p75": 671.9000000000233,
+        "cv": 0.021609454459184732,
+        "n": 5,
+        "invalid": 0,
         "values": [
-          703.9000000000233,
-          694.7000000000698,
-          691.6999999999534,
-          690,
-          689.7000000000698
-        ]
+          659.8999999999651,
+          671.9000000000233,
+          659.4000000000233,
+          694.9000000000233,
+          667.7000000000698
+        ],
+        "stability": {
+          "tier": "stable",
+          "flagged": false,
+          "note": "low variance: reliable for improvement certification"
+        }
+      },
+      "transportEventRatio": {
+        "median": 0.02528779014908473,
+        "p10": 0.02528779014908473,
+        "p90": 0.02528779014908473,
+        "mean": 0.02528779014908473,
+        "sd": 0,
+        "mad": 0,
+        "min": 0.02528779014908473,
+        "max": 0.02528779014908473,
+        "p25": 0.02528779014908473,
+        "p75": 0.02528779014908473,
+        "cv": 0,
+        "n": 5,
+        "invalid": 0,
+        "values": [
+          0.02528779014908473,
+          0.02528779014908473,
+          0.02528779014908473,
+          0.02528779014908473,
+          0.02528779014908473
+        ],
+        "stability": {
+          "tier": "stable",
+          "flagged": false,
+          "note": "low variance: reliable for improvement certification"
+        }
+      },
+      "synthsRetained": {
+        "median": 0,
+        "p10": 0,
+        "p90": 0,
+        "mean": 0,
+        "sd": 0,
+        "mad": 0,
+        "min": 0,
+        "max": 0,
+        "p25": 0,
+        "p75": 0,
+        "cv": null,
+        "n": 5,
+        "invalid": 0,
+        "values": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "stability": {
+          "tier": "extreme",
+          "flagged": true,
+          "note": "extreme variance: improvements demoted to likely-noise unless ≥3σ; investigate measurement method"
+        }
+      },
+      "transportEventCount": {
+        "median": 268,
+        "p10": 268,
+        "p90": 268,
+        "mean": 268,
+        "sd": 0,
+        "mad": 0,
+        "min": 268,
+        "max": 268,
+        "p25": 268,
+        "p75": 268,
+        "cv": 0,
+        "n": 5,
+        "invalid": 0,
+        "values": [
+          268,
+          268,
+          268,
+          268,
+          268
+        ],
+        "stability": {
+          "tier": "stable",
+          "flagged": false,
+          "note": "low variance: reliable for improvement certification"
+        }
       }
     },
     "musical-tree.html": {
       "executionTime": {
-        "median": 20119.100000000093,
-        "p10": 20113.659999999963,
-        "p90": 20258.779999999933,
+        "median": 20174.800000000047,
+        "p10": 20109.219999999994,
+        "p90": 20342.98000000003,
+        "mean": 20214.740000000013,
+        "sd": 116.99048251889214,
+        "mad": 79.90000000002328,
+        "min": 20094.900000000023,
+        "max": 20368.300000000047,
+        "p25": 20130.699999999953,
+        "p75": 20305,
+        "cv": 0.005787384973484302,
+        "n": 5,
+        "invalid": 0,
         "values": [
-          20113.299999999814,
-          20114.200000000186,
-          20119.100000000093,
-          20124.800000000047,
-          20348.09999999986
-        ]
+          20094.900000000023,
+          20174.800000000047,
+          20305,
+          20130.699999999953,
+          20368.300000000047
+        ],
+        "stability": {
+          "tier": "stable",
+          "flagged": false,
+          "note": "low variance: reliable for improvement certification"
+        }
       },
-      "maxQueueDepth": {
-        "median": 6,
-        "p10": 6,
-        "p90": 6,
-        "values": [
-          6,
-          6,
-          6,
-          6,
-          6
-        ]
-      },
-      "maxDepth": {
+      "synthsRetained": {
         "median": 1,
         "p10": 1,
         "p90": 1,
+        "mean": 1,
+        "sd": 0,
+        "mad": 0,
+        "min": 1,
+        "max": 1,
+        "p25": 1,
+        "p75": 1,
+        "cv": 0,
+        "n": 5,
+        "invalid": 0,
         "values": [
           1,
           1,
           1,
           1,
           1
-        ]
+        ],
+        "stability": {
+          "tier": "stable",
+          "flagged": false,
+          "note": "low variance: reliable for improvement certification"
+        }
       },
-      "memoryDelta": {
+      "canvasInkCoverage": {
+        "median": 0.3558897569444444,
+        "p10": 0.3558897569444444,
+        "p90": 0.3558897569444444,
+        "mean": 0.3558897569444444,
+        "sd": 0,
+        "mad": 0,
+        "min": 0.3558897569444444,
+        "max": 0.3558897569444444,
+        "p25": 0.3558897569444444,
+        "p75": 0.3558897569444444,
+        "cv": 0,
+        "n": 5,
+        "invalid": 0,
+        "values": [
+          0.3558897569444444,
+          0.3558897569444444,
+          0.3558897569444444,
+          0.3558897569444444,
+          0.3558897569444444
+        ],
+        "stability": {
+          "tier": "stable",
+          "flagged": false,
+          "note": "low variance: reliable for improvement certification"
+        }
+      },
+      "canvasInkDrift": {
         "median": 0,
         "p10": 0,
         "p90": 0,
+        "mean": 0,
+        "sd": 0,
+        "mad": 0,
+        "min": 0,
+        "max": 0,
+        "p25": 0,
+        "p75": 0,
+        "cv": null,
+        "n": 5,
+        "invalid": 0,
         "values": [
           0,
           0,
           0,
           0,
           0
-        ]
-      },
-      "retainedHeap": {
-        "median": 0,
-        "p10": 0,
-        "p90": 0,
-        "values": [
-          0,
-          0,
-          0,
-          0,
-          0
-        ]
+        ],
+        "stability": {
+          "tier": "extreme",
+          "flagged": true,
+          "note": "extreme variance: improvements demoted to likely-noise unless ≥3σ; investigate measurement method"
+        }
       }
     },
     "ascending-notes-color-spiral.html": {
       "executionTime": {
-        "median": 17881.199999999953,
-        "p10": 17876.48000000012,
-        "p90": 17883.399999999954,
+        "median": 17936.799999999814,
+        "p10": 17903.879999999983,
+        "p90": 18013.499999999814,
+        "mean": 17954.55999999987,
+        "sd": 55.28076519000494,
+        "mad": 36.1999999997206,
+        "min": 17900.600000000093,
+        "max": 18014.299999999814,
+        "p25": 17908.799999999814,
+        "p75": 18012.299999999814,
+        "cv": 0.0030789261998069206,
+        "n": 5,
+        "invalid": 0,
         "values": [
-          17881.199999999953,
-          17879.600000000093,
-          17882.199999999953,
-          17874.40000000014,
-          17884.199999999953
-        ]
+          17936.799999999814,
+          17908.799999999814,
+          18014.299999999814,
+          17900.600000000093,
+          18012.299999999814
+        ],
+        "stability": {
+          "tier": "stable",
+          "flagged": false,
+          "note": "low variance: reliable for improvement certification"
+        }
       },
       "blocksExecuted": {
         "median": 228,
         "p10": 228,
         "p90": 228,
+        "mean": 228,
+        "sd": 0,
+        "mad": 0,
+        "min": 228,
+        "max": 228,
+        "p25": 228,
+        "p75": 228,
+        "cv": 0,
+        "n": 5,
+        "invalid": 0,
         "values": [
           228,
           228,
           228,
           228,
           228
-        ]
-      },
-      "maxDepth": {
-        "median": 1,
-        "p10": 1,
-        "p90": 1,
-        "values": [
-          1,
-          1,
-          1,
-          1,
-          1
-        ]
+        ],
+        "stability": {
+          "tier": "stable",
+          "flagged": false,
+          "note": "low variance: reliable for improvement certification"
+        }
       }
     },
     "crabcanon-plot.html": {
-      "scheduleLagMean": {
-        "median": 5.801341389259678e-12,
-        "p10": 5.493866502867014e-12,
-        "p90": 8.197836883802075e-12,
+      "transportEventRatio": {
+        "median": 0.026420454545454546,
+        "p10": 0.026420454545454546,
+        "p90": 0.026420454545454546,
+        "mean": 0.026420454545454546,
+        "sd": 0,
+        "mad": 0,
+        "min": 0.026420454545454546,
+        "max": 0.026420454545454546,
+        "p25": 0.026420454545454546,
+        "p75": 0.026420454545454546,
+        "cv": 0,
+        "n": 5,
+        "invalid": 0,
         "values": [
-          8.580600494398724e-12,
-          5.801341389259678e-12,
-          5.663515302379941e-12,
-          7.623691467907102e-12,
-          5.380767303191729e-12
-        ]
+          0.026420454545454546,
+          0.026420454545454546,
+          0.026420454545454546,
+          0.026420454545454546,
+          0.026420454545454546
+        ],
+        "stability": {
+          "tier": "stable",
+          "flagged": false,
+          "note": "low variance: reliable for improvement certification"
+        }
       },
-      "scheduleLagMax": {
-        "median": 2.1316282072803006e-11,
-        "p10": 1.9184653865522705e-11,
-        "p90": 3.6754954635398464e-11,
+      "cacheSkippedCount": {
+        "median": 656,
+        "p10": 656,
+        "p90": 656,
+        "mean": 656,
+        "sd": 0,
+        "mad": 0,
+        "min": 656,
+        "max": 656,
+        "p25": 656,
+        "p75": 656,
+        "cv": 0,
+        "n": 5,
+        "invalid": 0,
         "values": [
-          3.9960923459148034e-11,
-          1.7763568394002505e-11,
-          2.1316282072803006e-11,
-          3.1946001399774104e-11,
-          2.1316282072803006e-11
-        ]
+          656,
+          656,
+          656,
+          656,
+          656
+        ],
+        "stability": {
+          "tier": "stable",
+          "flagged": false,
+          "note": "low variance: reliable for improvement certification"
+        }
+      },
+      "viewportCulledFraction": {
+        "median": 0.8549946294307197,
+        "p10": 0.8549946294307197,
+        "p90": 0.8549946294307197,
+        "mean": 0.8549946294307198,
+        "sd": 1.2412670766236366e-16,
+        "mad": 0,
+        "min": 0.8549946294307197,
+        "max": 0.8549946294307197,
+        "p25": 0.8549946294307197,
+        "p75": 0.8549946294307197,
+        "cv": 1.451783477809806e-16,
+        "n": 5,
+        "invalid": 0,
+        "values": [
+          0.8549946294307197,
+          0.8549946294307197,
+          0.8549946294307197,
+          0.8549946294307197,
+          0.8549946294307197
+        ],
+        "stability": {
+          "tier": "stable",
+          "flagged": false,
+          "note": "low variance: reliable for improvement certification"
+        }
       }
     }
   },
   "source": "benchmark-results.json",
-  "commitSha": "c07b213b11deb17ca086d806c990550b0b782243",
+  "commitSHA": "b522f9be94364db54ff51cbe71797b1ffddc71d5",
+  "harness": {
+    "ref": "56d2c0f4ba861b713dac9f14447d697c770d69a0",
+    "source": "PERFSENSE_REF"
+  },
+  "env": {
+    "os": "linux 6.17.0-1022-azure",
+    "arch": "x64",
+    "node": "v20.20.2",
+    "cpu": "AMD EPYC 7763 64-Core Processor",
+    "cores": 4,
+    "memoryGB": 16,
+    "runner": "github-hosted",
+    "coldState": true,
+    "loadAvg1m": 0.2,
+    "cpuQuota": {
+      "quotaCpus": null,
+      "throttled": null,
+      "source": "unavailable"
+    }
+  },
+  "commitSha": "b522f9be94364db54ff51cbe71797b1ffddc71d5",
   "runner": {
     "os": "ubuntu-latest",
-    "chromeVersion": "Google Chrome 152.0.7977.82 ",
-    "nodeVersion": "20"
+    "chromeVersion": "Google Chrome 154.0.8037.57 ",
+    "nodeVersion": "20.20.2"
   },
   "statistics": {
     "flagRule": "MannWhitneyU p<0.05 AND medianDelta>=threshold AND cliffsDelta>=0.147",
