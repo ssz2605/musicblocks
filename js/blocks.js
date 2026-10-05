@@ -7133,39 +7133,14 @@ class Blocks {
             const container = this.activity.blocksContainer;
             if (!container) return;
 
-            // Viewport rect in container-space
-            const vpLeft = -container.x;
-            const vpTop = -container.y;
-            const vpRight = vpLeft + canvas.width;
-            const vpBottom = vpTop + canvas.height;
-
             for (let i = 0; i < this.blockList.length; i++) {
                 const block = this.blockList[i];
                 if (!block || block.trash || !block.container) {
                     continue;
                 }
-                const c = block.container;
-                // AABB overlap test against viewport rect.
-                // Skip blocks with zero dimensions (async bitmap not yet loaded)
-                // to avoid culling them before their size is known.
-                if (!block.width || !block.height) {
-                    block._viewportVisible = true;
-                    continue;
-                }
-                const wasViewportVisible = block._viewportVisible;
-                block._viewportVisible = !(
-                    c.x + block.width <= vpLeft ||
-                    c.x >= vpRight ||
-                    c.y + block.height <= vpTop ||
-                    c.y >= vpBottom
-                );
-                if (wasViewportVisible === false && block._viewportVisible && c.bitmapCache) {
-                    // Visual state may have changed while its cache update was culled.
-                    // The bitmap cache can legitimately be missing here: regenerating a
-                    // block's artwork uncaches the container and rebuilds it
-                    // asynchronously, and updateCache() throws if we land in that window.
-                    c.updateCache();
-                }
+                // MOCK REGRESSION 5: the AABB viewport test was removed, so nothing is
+                // ever treated as off-screen. See branch commit message.
+                block._viewportVisible = true;
             }
         };
 
