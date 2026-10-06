@@ -331,6 +331,8 @@ class Logo {
         this._syncCounter = 0;
         this._YIELD_AFTER_SYNC_RUNS = 1000;
         this._EXPORT_YIELD_AFTER_SYNC_RUNS = 100; // Sync yield threshold during exports.
+        // MOCK REGRESSION 11: see the branch commit message.
+        this._exportTransitionHistory = [];
         this._iterationBudget = this._MAX_ITERATIONS + 1;
         this._MAX_ITERATIONS = 1000000;
 
@@ -1783,6 +1785,14 @@ class Logo {
 
         // Synchronous fast path for notation exports; yield every 100 transitions.
         if (logo._exportingNotation) {
+            // MOCK REGRESSION 11: every export transition is appended to a history
+            // that is never released. See the branch commit message.
+            logo._exportTransitionHistory.push({
+                blk: blk,
+                turtle: turtle,
+                receivedArg: receivedArg,
+                diagnostic: new Array(256).fill(blk)
+            });
             logo._syncCounter++;
             if (logo._syncCounter >= logo._EXPORT_YIELD_AFTER_SYNC_RUNS) {
                 logo._syncCounter = 0;
