@@ -2148,11 +2148,7 @@ class Activity {
         let maxRefreshTime = 0;
         let lastRefreshReport = performance.now();
 
-        /** Suppress intermediate refreshCanvas() calls during project loading. */
-        this._suppressRefresh = false;
-
         this.refreshCanvas = () => {
-            if (this._suppressRefresh) return;
             this.stageDirty = true;
             this.update = true;
             this._startRenderLoop();
