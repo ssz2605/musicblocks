@@ -2461,6 +2461,11 @@ class Logo {
                         // turtle's callback already cleaned up.
                         if (!logo.turtles.running()) {
                             logo._cleanupAfterCompletion();
+                            // MOCK REGRESSION 7: the visual reset was moved back
+                            // into the shared completion path. See branch message.
+                            for (const done of logo.turtles.turtleList) {
+                                done.painter.doClear(true, true, true);
+                            }
                         }
                     }, 1000);
                 }
