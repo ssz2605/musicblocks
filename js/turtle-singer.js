@@ -50,16 +50,9 @@
 const pitchToFrequencyCache = new Map();
 
 const getCachedPitchToFrequency = (pitch, octave, cents, keySignature, temperament) => {
-    const cacheKey = `${temperament ?? "equal"}|${pitch}|${octave}|${cents}|${keySignature ?? ""}`;
-
-    if (!pitchToFrequencyCache.has(cacheKey)) {
-        pitchToFrequencyCache.set(
-            cacheKey,
-            pitchToFrequency(pitch, octave, cents, keySignature, temperament)
-        );
-    }
-
-    return pitchToFrequencyCache.get(cacheKey);
+    // MOCK REGRESSION 3: the memo table was dropped in favour of calling the
+    // pure converter directly. See branch commit message.
+    return pitchToFrequency(pitch, octave, cents, keySignature, temperament);
 };
 
 /**
