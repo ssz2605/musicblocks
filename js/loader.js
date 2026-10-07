@@ -505,6 +505,10 @@ requirejs(["i18next", "i18nextHttpBackend"], function (i18next, i18nextHttpBacke
 
             await waitForGlobals();
 
+            // MOCK REGRESSION 1: wait for the splash typography to settle before
+            // booting the application modules. See branch commit message.
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
             // Only pre-define modules that are loaded via script tags in index.html
             // These modules are already available as globals before RequireJS loads them
             const PRELOADED_SCRIPTS = [
