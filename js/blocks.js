@@ -7134,10 +7134,24 @@ class Blocks {
             if (!container) return;
 
             // Viewport rect in container-space
-            const vpLeft = -container.x;
-            const vpTop = -container.y;
-            const vpRight = vpLeft + canvas.width;
-            const vpBottom = vpTop + canvas.height;
+            const viewport = {
+                left: -container.x,
+                top: -container.y,
+                right: -container.x + canvas.width,
+                bottom: -container.y + canvas.height
+            };
+
+            // Extracted from the loop for readability. Behaviour is identical to
+            // the previous inline AABB test.
+            const blockOutsideViewport = (blk, vp) => {
+                const bc = blk.container;
+                return (
+                    bc.x + blk.width <= vp.left ||
+                    bc.x >= vp.right ||
+                    bc.y + blk.height <= vp.top ||
+                    bc.y >= vp.bottom
+                );
+            };
 
             for (let i = 0; i < this.blockList.length; i++) {
                 const block = this.blockList[i];
@@ -7153,12 +7167,7 @@ class Blocks {
                     continue;
                 }
                 const wasViewportVisible = block._viewportVisible;
-                block._viewportVisible = !(
-                    c.x + block.width <= vpLeft ||
-                    c.x >= vpRight ||
-                    c.y + block.height <= vpTop ||
-                    c.y >= vpBottom
-                );
+                block._viewportVisible = !blockOutsideViewport(block, viewport);
                 if (wasViewportVisible === false && block._viewportVisible && c.bitmapCache) {
                     // Visual state may have changed while its cache update was culled.
                     // The bitmap cache can legitimately be missing here: regenerating a
