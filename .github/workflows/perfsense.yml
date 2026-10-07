@@ -52,7 +52,7 @@ env:
     # f41ae96 = Freere synthsRetained promoted to required, closing the #7832
     #           gap; fingerprint loci corrected against 5bd6ae193. Must stay
     #           identical to the pin in perfsense-baseline.yml.
-    PERFSENSE_REF: f41ae961a3a5590a10b04194eac9912a89f8b5bd
+    PERFSENSE_REF: 3aea1a8020b860eff13c1039f938090468a37a40
 
 # Runs on PRs that touch runtime code. Posts a single performance comparison
 # comment. Comment-only — never fails checks or blocks merges.
