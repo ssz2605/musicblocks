@@ -2712,3 +2712,5 @@ if (typeof define === "function" && define.amd) {
 if (typeof window !== "undefined") {
     window.Singer = Singer;
 }
+
+// perfsense-hotpath-g: extra 8ms of hot-path bookkeeping idle per callback (mock only)
