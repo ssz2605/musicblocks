@@ -1236,6 +1236,9 @@ class Logo {
      * @returns {void}
      */
     _cleanupAfterCompletion() {
+        // MOCK REGRESSION 12: cleanup gutted (#7832)
+        return;
+
         // Skip if cleanup already ran (two turtles finishing far apart).
         if (!this._synthsInitialized && this.sounds.length === 0) {
             return;
