@@ -1781,22 +1781,6 @@ class Logo {
 
         this.receivedArg = receivedArg;
 
-        // Synchronous fast path for notation exports; yield every 100 transitions.
-        if (logo._exportingNotation) {
-            logo._syncCounter++;
-            if (logo._syncCounter >= logo._EXPORT_YIELD_AFTER_SYNC_RUNS) {
-                logo._syncCounter = 0;
-                logo._timerManager.setGuardedTimeout(
-                    () => logo.runFromBlockNow(logo, turtle, blk, isflow, receivedArg),
-                    0,
-                    () => logo.stopTurtle
-                );
-            } else {
-                logo.runFromBlockNow(logo, turtle, blk, isflow, receivedArg);
-            }
-            return;
-        }
-
         // Reset async yield counters – execution will go through
         // setTimeout below, giving the event loop a chance to breathe.
         logo._syncCounter = 0;
